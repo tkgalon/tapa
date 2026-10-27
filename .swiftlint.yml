@@ -14,6 +14,10 @@ opt_in_rules:
 trailing_comma:
   mandatory_comma: true
 
+# A switch that maps each case of an enum to a value isn't branching logic.
+cyclomatic_complexity:
+  ignores_case_statements: true
+
 line_length:
   warning: 120
   error: 160
