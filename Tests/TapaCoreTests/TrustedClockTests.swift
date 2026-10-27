@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import TapaCore
+import Testing
 
 struct TrustedClockTests {
     func verifiedClock() -> TrustedClock {

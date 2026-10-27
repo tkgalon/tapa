@@ -11,6 +11,9 @@ opt_in_rules:
   - sorted_imports
   - toggle_bool
 
+trailing_comma:
+  mandatory_comma: true
+
 line_length:
   warning: 120
   error: 160

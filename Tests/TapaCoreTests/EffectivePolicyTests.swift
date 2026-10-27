@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import TapaCore
+import Testing
 
 struct EffectivePolicyTests {
     func session(_ mode: SessionMode, until endAt: Date, lists: Set<UUID>) -> Session {

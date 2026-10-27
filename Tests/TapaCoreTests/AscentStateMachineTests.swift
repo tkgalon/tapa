@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import TapaCore
+import Testing
 
 struct StartTests {
     let now = date(26, 10)
