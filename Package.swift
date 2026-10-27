@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "Tapa",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v14)],
     products: [
         .library(name: "TapaCore", targets: ["TapaCore"]),
     ],
@@ -14,6 +14,7 @@ let package = Package(
         .target(name: "TapaDaemonKit", dependencies: ["TapaCore", "TapaIPC"]),
         .executableTarget(name: "TapaDaemon", dependencies: ["TapaDaemonKit"]),
         .executableTarget(name: "tapactl", dependencies: ["TapaCore", "TapaIPC"]),
+        .executableTarget(name: "TapaApp", dependencies: ["TapaCore", "TapaIPC"]),
         .testTarget(name: "TapaCoreTests", dependencies: ["TapaCore"]),
         .testTarget(name: "TapaDaemonKitTests", dependencies: ["TapaDaemonKit", "TapaIPC"]),
     ]
