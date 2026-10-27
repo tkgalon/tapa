@@ -10,8 +10,9 @@ let package = Package(
     ],
     targets: [
         .target(name: "TapaCore"),
-        .target(name: "TapaDaemonKit", dependencies: ["TapaCore"]),
+        .target(name: "TapaIPC", dependencies: ["TapaCore"]),
+        .target(name: "TapaDaemonKit", dependencies: ["TapaCore", "TapaIPC"]),
         .testTarget(name: "TapaCoreTests", dependencies: ["TapaCore"]),
-        .testTarget(name: "TapaDaemonKitTests", dependencies: ["TapaDaemonKit"]),
+        .testTarget(name: "TapaDaemonKitTests", dependencies: ["TapaDaemonKit", "TapaIPC"]),
     ]
 )
