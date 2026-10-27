@@ -29,21 +29,11 @@ struct AscentBar: View {
             .labelsHidden()
             .fixedSize()
 
-            Picker("Until", selection: $endAt) {
-                ForEach(endTimes, id: \.self) { time in
-                    Text(time, format: .dateTime.hour().minute()).tag(time)
-                }
-            }
-            .fixedSize()
+            Text("Until")
+                .accessibilityHidden(true)
+            EndTimeButton(endAt: $endAt, choices: endTimes)
 
-            Menu {
-                ForEach(daemon.config.leaveBehindLists) { list in
-                    Toggle(list.name, isOn: $listIDs[contains: list.id])
-                }
-            } label: {
-                Text(listSummary)
-            }
-            .fixedSize()
+            ListsButton(selection: $listIDs, lists: daemon.config.leaveBehindLists)
 
             Button("Begin Ascent", action: begin)
                 .buttonStyle(.borderedProminent)
@@ -67,11 +57,6 @@ struct AscentBar: View {
         } message: { failure in
             Text(failure)
         }
-    }
-
-    private var listSummary: String {
-        let names = daemon.config.leaveBehindLists.filter { listIDs.contains($0.id) }.map(\.name)
-        return names.isEmpty ? String(localized: "Choose Lists") : names.formatted(.list(type: .and))
     }
 
     private func begin() {
