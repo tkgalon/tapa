@@ -5,3 +5,11 @@ DerivedData/
 *.xcodeproj/
 xcuserdata/
 Package.resolved
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.key
