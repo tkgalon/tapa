@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import TapaCore
+import Testing
 
 struct RitualTests {
     let workTime = Ritual(

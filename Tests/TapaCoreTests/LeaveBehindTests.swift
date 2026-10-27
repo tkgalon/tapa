@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import TapaCore
+import Testing
 
 struct DomainNameTests {
     @Test(arguments: [
@@ -37,7 +37,7 @@ struct DomainNameTests {
 
     @Test func codableRoundTripsAndValidates() throws {
         let data = try JSONEncoder().encode([DomainName("reddit.com")!])
-        #expect(String(decoding: data, as: UTF8.self) == #"["reddit.com"]"#)
+        #expect(String(bytes: data, encoding: .utf8) == #"["reddit.com"]"#)
         #expect(try JSONDecoder().decode([DomainName].self, from: data) == [DomainName("reddit.com")!])
         #expect(throws: DecodingError.self) {
             try JSONDecoder().decode([DomainName].self, from: Data(#"["not a domain"]"#.utf8))
