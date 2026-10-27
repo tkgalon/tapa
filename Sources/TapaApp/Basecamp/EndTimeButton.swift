@@ -20,8 +20,9 @@ struct EndTimeButton: View {
         }
         .accessibilityLabel(Text("Until \(endAt, format: .dateTime.hour().minute())"))
         .popover(isPresented: $isPresented, arrowEdge: .top) {
+            // Latest on top, so the times climb away from the bar the popover rises from.
             VStack(spacing: 2) {
-                ForEach(choices, id: \.self) { time in
+                ForEach(choices.reversed(), id: \.self) { time in
                     ChoiceRow(isSelected: time == endAt) {
                         endAt = time
                         isPresented = false
