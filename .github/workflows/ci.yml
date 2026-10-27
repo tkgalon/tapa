@@ -19,4 +19,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: brew install swiftlint
-      - run: swiftlint lint --strict
+      - run: ./scripts/lint.sh
