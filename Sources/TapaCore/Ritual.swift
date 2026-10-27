@@ -85,6 +85,18 @@ public struct Ritual: Identifiable, Codable, Hashable, Sendable {
         return nil
     }
 
+    /// Returns the first occurrence that starts after `date`, looking up to a week ahead.
+    public func nextOccurrence(after date: Date, calendar: Calendar) -> DateInterval? {
+        let today = calendar.startOfDay(for: date)
+        for offset in 0...7 {
+            guard let day = calendar.date(byAdding: .day, value: offset, to: today) else { return nil }
+            if let interval = occurrence(startingOn: day, calendar: calendar), interval.start > date {
+                return interval
+            }
+        }
+        return nil
+    }
+
     private func occurrence(startingOn day: Date, calendar: Calendar) -> DateInterval? {
         guard let weekday = Weekday(rawValue: calendar.component(.weekday, from: day)),
               days.contains(weekday),
