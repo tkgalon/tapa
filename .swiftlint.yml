@@ -1,0 +1,25 @@
+included:
+  - Package.swift
+  - Sources
+  - Tests
+
+opt_in_rules:
+  - closure_spacing
+  - empty_count
+  - explicit_init
+  - first_where
+  - sorted_imports
+  - toggle_bool
+
+line_length:
+  warning: 120
+  error: 160
+
+identifier_name:
+  excluded:
+    - at
+    - id
+
+# Test fixtures use short builders such as date(26, 9).
+function_parameter_count:
+  warning: 6
