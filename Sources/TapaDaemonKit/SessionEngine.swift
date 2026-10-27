@@ -81,6 +81,10 @@ public actor SessionEngine {
         return snapshot(at: now)
     }
 
+    public func config() -> DaemonConfig {
+        state.config
+    }
+
     @discardableResult
     public func start(_ request: StartRequest) throws(TapaError) -> SessionSnapshot {
         let now = advance()
