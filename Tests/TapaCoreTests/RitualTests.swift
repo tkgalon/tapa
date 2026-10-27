@@ -46,6 +46,19 @@ struct RitualTests {
         #expect(fridayNight.occurrence(containing: date(30, 1), calendar: calendar) == nil)
     }
 
+    @Test func nextOccurrenceLaterToday() {
+        #expect(workTime.nextOccurrence(after: date(26, 8), calendar: calendar)
+            == DateInterval(start: date(26, 9), end: date(26, 17)))
+    }
+
+    @Test func nextOccurrenceSkipsTheRunningOne() {
+        #expect(workTime.nextOccurrence(after: date(26, 9), calendar: calendar)?.start == date(27, 9))
+    }
+
+    @Test func nextOccurrenceSkipsTheWeekend() {
+        #expect(workTime.nextOccurrence(after: date(30, 18), calendar: calendar)?.start == date(2, 9, month: 11))
+    }
+
     @Test func validation() throws {
         try workTime.validate()
         try fridayNight.validate()
