@@ -1,0 +1,2 @@
+# Build output and the signing certificate; the private key is deleted after it's imported.
+.spike/
