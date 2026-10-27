@@ -12,21 +12,22 @@ The name comes from *bertapa*: withdrawing from the crowd to focus.
 
 | Path | What it is |
 | --- | --- |
-| `Sources/TapaCore` | Domain rules in pure Swift with no I/O: sessions, `AscentStateMachine`, `effectivePolicy`, Rituals, Descent, the trusted clock |
+| `Sources/TapaCore` | Domain rules in pure Swift with no I/O: sessions, `AscentStateMachine`, `EffectivePolicy`, Rituals, Descent, `TrustedClock` |
 | `Tests/TapaCoreTests` | Unit tests (Swift Testing) |
 
 The daemon, tracker and app targets will be added in later milestones.
 
 ## Development
 
-Requires macOS 13+ and Swift 6.
+Requires macOS 13+, Swift 6 and [SwiftLint](https://github.com/realm/SwiftLint) (`brew install swiftlint`).
 
 ```sh
 swift build
 ./scripts/test.sh
+./scripts/lint.sh
 ```
 
-`scripts/test.sh` runs `swift test`. With only the Command Line Tools installed (no Xcode), it also adds the flags Swift Testing needs to build.
+Both scripts also work with only the Command Line Tools installed (no Xcode): `test.sh` adds the flags Swift Testing needs, and `lint.sh` points SwiftLint at the Command Line Tools' SourceKit.
 
 ## License
 
