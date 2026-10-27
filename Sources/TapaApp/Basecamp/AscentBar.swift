@@ -21,13 +21,7 @@ struct AscentBar: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Picker("Mode", selection: $mode) {
-                Text("🏔️ Summit Mode").tag(SessionMode.summit)
-                Text("🥾 Trail").tag(SessionMode.trail)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .fixedSize()
+            ModePicker(mode: $mode)
 
             Text("Until")
                 .accessibilityHidden(true)
