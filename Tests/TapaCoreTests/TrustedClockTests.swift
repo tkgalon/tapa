@@ -27,6 +27,14 @@ struct TrustedClockTests {
         #expect(clock.now(monotonic: 100) == date(26, 9, 2))
     }
 
+    @Test func subSecondDriftIsIgnored() {
+        var clock = verifiedClock()
+        let halfSecondAhead = date(26, 9).addingTimeInterval(0.5)
+        let accepted = clock.observe(systemTime: halfSecondAhead, monotonic: 100, summitActive: false)
+        #expect(!accepted)
+        #expect(clock.now(monotonic: 100) == date(26, 9))
+    }
+
     @Test func bigJumpsAreIgnoredDuringSummit() {
         var clock = verifiedClock()
         let forward = clock.observe(systemTime: date(26, 15), monotonic: 100, summitActive: true)

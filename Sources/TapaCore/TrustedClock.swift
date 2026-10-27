@@ -12,6 +12,7 @@ public protocol MonotonicClock: Sendable {
 /// After a reboot it's only a lower bound and ignores the system clock until
 /// `verify(networkTime:monotonic:)`, so sessions can end late but never early.
 public struct TrustedClock: Codable, Hashable, Sendable {
+    public static let minimumCorrection: TimeInterval = 1
     public static let maximumAcceptedDrift: TimeInterval = 120
 
     public private(set) var bootSessionID: String
@@ -60,12 +61,14 @@ public struct TrustedClock: Codable, Hashable, Sendable {
         isVerified = true
     }
 
-    /// Ignores the system time while unverified, and ignores changes larger than
-    /// `maximumAcceptedDrift` while Summit Mode is active. Returns whether the clock moved.
+    /// Ignores the system time while unverified, ignores changes under `minimumCorrection`, and
+    /// ignores changes larger than `maximumAcceptedDrift` while Summit Mode is active. Returns
+    /// whether the clock moved.
     @discardableResult
     public mutating func observe(systemTime: Date, monotonic: TimeInterval, summitActive: Bool) -> Bool {
         guard isVerified else { return false }
         let drift = abs(systemTime.timeIntervalSince(now(monotonic: monotonic)))
+        guard drift >= Self.minimumCorrection else { return false }
         guard drift <= Self.maximumAcceptedDrift || !summitActive else { return false }
         anchor(at: systemTime, monotonic: monotonic)
         return true
