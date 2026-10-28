@@ -43,9 +43,10 @@ struct PhotoCredit: Identifiable {
 
     var id: String { photographer }
 
+    /// One row per screen. Mist picks among several photos, so its photographers share a row.
     static var all: [PhotoCredit] {
-        Photo.allCases.map { PhotoCredit(screen: $0.screen, photographer: $0.photographer) }
-            + ["Paul Pastourmatzis", "David Jusko", "Tobias Kebernik", "Tyler Lastovich"]
-            .map { PhotoCredit(screen: "Mist", photographer: $0) }
+        let mist = ["Paul Pastourmatzis", "David Jusko", "Tobias Kebernik", "Tyler Lastovich"]
+        return Photo.allCases.map { PhotoCredit(screen: $0.screen, photographer: $0.photographer) }
+            + [PhotoCredit(screen: "Mist", photographer: mist.formatted(.list(type: .and)))]
     }
 }

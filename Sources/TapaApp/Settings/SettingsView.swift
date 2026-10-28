@@ -2,9 +2,42 @@ import ServiceManagement
 import SwiftUI
 import TapaCore
 
+/// Settings in three tabs, so none of them runs long: General, Browsers and About.
+struct SettingsView: View {
+    var body: some View {
+        TabView {
+            GeneralSettings()
+                .tabItem { Label("General", systemImage: "gearshape") }
+            Form { BrowsersSection() }
+                .formStyle(.grouped)
+                .frame(width: 480)
+                .fixedSize(horizontal: false, vertical: true)
+                .tabItem { Label("Browsers", systemImage: "safari") }
+            AboutSettings()
+                .tabItem { Label("About", systemImage: "info.circle") }
+        }
+        .onAppear {
+            DispatchQueue.main.async(execute: Self.centre)
+        }
+    }
+
+    /// In the middle of the screen every time Settings opens. `NSWindow.center()` leaves it high, in
+    /// the upper third.
+    @MainActor
+    private static func centre() {
+        guard let settings = NSApp.windows.first(where: { $0.identifier?.rawValue.contains("Settings") == true }),
+              let area = settings.screen?.visibleFrame
+        else { return }
+        settings.setFrameOrigin(NSPoint(
+            x: area.midX - settings.frame.width / 2,
+            y: area.midY - settings.frame.height / 2
+        ))
+    }
+}
+
 /// The few things worth changing rarely: starting at login, the time in the menu bar, the Descents
 /// left, and the way to remove Tapa.
-struct SettingsView: View {
+private struct GeneralSettings: View {
     @Environment(DaemonStore.self) private var daemon
     @AppStorage(MenuBarPreferences.showsTimeKey) private var showsTimeInMenuBar = true
 
@@ -42,24 +75,8 @@ struct SettingsView: View {
             }
 
             Section {
-                ForEach(PhotoCredit.all) { credit in
-                    LabeledContent(credit.screen) {
-                        Text(verbatim: "\(credit.photographer), Unsplash")
-                    }
-                }
-            } header: {
-                Text("Photos")
-            } footer: {
-                Link("Unsplash License", destination: URL(string: "https://unsplash.com/license")!)
-                    .font(.callout)
-            }
-
-            Section {
                 LabeledContent("Background Service") {
                     Text(serviceStatus)
-                }
-                LabeledContent("Version") {
-                    Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
                 }
                 LabeledContent("Remove Tapa from This Mac") {
                     Button("Uninstall…", role: .destructive) { isConfirmingUninstall = true }
