@@ -8,6 +8,8 @@
     <string>Tapa</string>
     <key>CFBundleDisplayName</key>
     <string>Tapa</string>
+    <key>LSUIElement</key>
+    <true/>
     <key>NSAppleEventsUsageDescription</key>
     <string>Tapa reads the address of the tab you're on so it can show Mist instead of a website you left behind.</string>
 </dict>
