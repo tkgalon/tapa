@@ -1,6 +1,6 @@
 #!/bin/sh
-# Removes Tapa, Tapa.app, its hosts file block and its signing certificate. Refuses while
-# Summit Mode runs.
+# Removes Tapa, Tapa.app, its hosts file block, its signing certificate and the Screen Time it
+# recorded. Refuses while Summit Mode runs.
 # Run as yourself. You'll be asked for your password once.
 set -eu
 
@@ -37,5 +37,6 @@ pkill -x Tapa 2>/dev/null || true
 launchctl bootout "gui/$(id -u)/id.tapa.tracker" 2>/dev/null || true
 rm -rf /Applications/Tapa.app
 rm -f "$HOME/Library/LaunchAgents/id.tapa.tracker.plist"
+rm -rf "$HOME/Library/Application Support/Tapa"
 security delete-identity -c "$cert_name" >/dev/null 2>&1 || true
 echo "Uninstalled."
