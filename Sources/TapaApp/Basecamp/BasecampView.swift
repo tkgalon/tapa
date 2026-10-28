@@ -32,16 +32,19 @@ struct BasecampView: View {
             scale = factor
         }
         .overlay(alignment: .topTrailing) {
-            if let snapshot = daemon.snapshot {
-                Text("^[\(snapshot.descentsRemaining) Descent](inflect: true) left this week")
-                    .font(.callout)
-                    .padding(.horizontal, 14)
-                    .frame(minHeight: 28)
-                    .glassBackground(in: .capsule)
-                    .padding(.top, 12)
-                    .padding(.trailing, 16)
-                    .ignoresSafeArea(edges: .top)
+            HStack(spacing: 8) {
+                if let snapshot = daemon.snapshot {
+                    Text("^[\(snapshot.descentsRemaining) Descent](inflect: true) left this week")
+                        .font(.callout)
+                        .padding(.horizontal, 14)
+                        .frame(minHeight: 28)
+                        .glassBackground(in: .capsule)
+                }
+                SettingsButton()
             }
+            .padding(.top, 12)
+            .padding(.trailing, 16)
+            .ignoresSafeArea(edges: .top)
         }
     }
 }

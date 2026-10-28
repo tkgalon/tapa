@@ -4,13 +4,13 @@ import TapaCore
 /// Mode, end time and Leave Behind lists, then Begin Ascent. Summit Mode goes through the Oath.
 struct AscentBar: View {
     @Environment(DaemonStore.self) private var daemon
+    @Environment(AppRouter.self) private var router
 
     /// Trail by default, so Summit Mode is always a deliberate choice.
     @State private var mode = SessionMode.trail
     @State private var endTimes: [Date]
     @State private var endAt: Date
     @State private var listIDs: Set<LeaveBehindList.ID> = []
-    @State private var pendingOath: PendingOath?
     @State private var failure: String?
     @State private var isShowingFailure = false
 
@@ -44,9 +44,6 @@ struct AscentBar: View {
                 listIDs = [first]
             }
         }
-        .sheet(item: $pendingOath) { pending in
-            OathSheet(request: pending.request)
-        }
         .alert("Couldn't Begin Ascent", isPresented: $isShowingFailure, presenting: failure) { _ in
             Button("OK") {}
         } message: { failure in
@@ -57,7 +54,7 @@ struct AscentBar: View {
     private func begin() {
         let request = StartRequest(mode: mode, endAt: endAt, leaveBehindIDs: listIDs)
         guard mode == .trail else {
-            pendingOath = PendingOath(request: request)
+            router.takeOath(for: request)
             return
         }
         Task {

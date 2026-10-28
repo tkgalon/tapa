@@ -62,6 +62,14 @@ final class DaemonStore {
         snapshot = try await connectedClient().requestRestStop()
     }
 
+    func startRestStop(length: TimeInterval) async throws {
+        snapshot = try await connectedClient().startRestStop(length: length)
+    }
+
+    func endRestStop() async throws {
+        snapshot = try await connectedClient().endRestStop()
+    }
+
     func updateConfig(_ newConfig: DaemonConfig) async throws {
         snapshot = try await connectedClient().updateConfig(newConfig)
         config = newConfig
@@ -76,6 +84,29 @@ final class DaemonStore {
                     .map { UpcomingRitual(ritual: ritual, interval: $0) }
             }
             .min { $0.interval.start < $1.interval.start }
+    }
+
+    /// The Ritual that started the running Ascent, when one did.
+    var runningRitualName: String? {
+        for session in snapshot?.activeSessions ?? [] {
+            if case .ritual(let id) = session.source {
+                return config.rituals.first { $0.id == id }?.name
+            }
+        }
+        return nil
+    }
+
+    /// The Leave Behind lists the running Ascent enforces, in list order.
+    var activeLists: [LeaveBehindList] {
+        let ids = Set(snapshot?.activeSessions.flatMap(\.leaveBehindIDs) ?? [])
+        return config.leaveBehindLists.filter { ids.contains($0.id) }
+    }
+
+    /// Ends every Trail session. Summit Mode sessions stay, since only a Descent ends them.
+    func endTrails() async throws {
+        for session in snapshot?.activeSessions ?? [] where session.mode == .trail {
+            try await endTrail(sessionID: session.id)
+        }
     }
 
     private func connectedClient() throws -> DaemonClient {
