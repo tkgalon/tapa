@@ -16,7 +16,9 @@ struct DetailView: View {
             }
         case .leaveBehind:
             LeaveBehindView()
-        case .rituals, .trailLog:
+        case .rituals:
+            RitualsView()
+        case .trailLog:
             ContentUnavailableView(
                 String(localized: item.title),
                 systemImage: item.systemImage,
