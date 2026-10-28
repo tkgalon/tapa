@@ -24,6 +24,8 @@
     <string>public.app-category.productivity</string>
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Tapa reads the address of the tab you're on so it can show Mist instead of a website you left behind.</string>
     <key>NSHighResolutionCapable</key>
     <true/>
 </dict>
