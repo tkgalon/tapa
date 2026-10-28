@@ -10,6 +10,15 @@ extension Color {
     static let glacierInk = Color(light: 0x24525E, dark: 0xA6D6E0)
     /// The committing button of The Summit Oath. White text reads on it in both appearances.
     static let summitNight = Color(light: 0x1D3448, dark: 0x2C4A63)
+    /// Ritual colors, ordered so neighbours in the list look nothing alike. White text reads on each
+    /// in both appearances.
+    private static let ritualColors: [UInt32] = [0x286B7C, 0xC0502A, 0x8045A8, 0x3A8150, 0x2F66B8, 0x946A0E, 0xB03A62]
+
+    /// The color of the Ritual at `index` in the list, repeating once the palette runs out.
+    static func ritual(at index: Int) -> Color {
+        let rgb = ritualColors[index % ritualColors.count]
+        return Color(light: rgb, dark: rgb)
+    }
 
     init(light: UInt32, dark: UInt32) {
         self.init(nsColor: NSColor(name: nil) { appearance in

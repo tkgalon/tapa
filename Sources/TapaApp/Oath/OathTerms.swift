@@ -1,19 +1,13 @@
 import SwiftUI
-import TapaCore
 
-/// Ends, Leave Behind and Rest Stops, each with its icon.
-struct OathTerms: View {
-    let request: StartRequest
+/// When it runs, Leave Behind and Rest Stops, each with its icon.
+struct OathTerms<When: View>: View {
     let websiteCount: Int
+    @ViewBuilder let when: When
 
     var body: some View {
         VStack(spacing: 0) {
-            OathTermRow(title: "Ends", systemImage: "clock") {
-                TimelineView(.everyMinute) { context in
-                    Text("\(request.endAt, format: .dateTime.hour().minute()) · in \(remaining(at: context.date))")
-                        .monospacedDigit()
-                }
-            }
+            when
             Divider()
             OathTermRow(title: "Leave Behind", systemImage: "nosign") {
                 Text("^[\(websiteCount) website](inflect: true)")
@@ -29,10 +23,5 @@ struct OathTerms: View {
             RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(.separator)
         }
-    }
-
-    private func remaining(at now: Date) -> String {
-        Duration.seconds(max(request.endAt.timeIntervalSince(now), 0))
-            .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
     }
 }
