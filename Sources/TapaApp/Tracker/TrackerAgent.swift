@@ -42,7 +42,9 @@ enum TrackerAgent {
     }
 
     private static var trackerPath: String {
-        Bundle.main.bundleURL.appending(path: "Contents/MacOS/TapaTracker").path(percentEncoded: false)
+        Bundle.main.bundleURL
+            .appending(path: "Contents/Library/LoginItems/TapaTracker.app/Contents/MacOS/TapaTracker")
+            .path(percentEncoded: false)
     }
 
     private static var isLoaded: Bool {

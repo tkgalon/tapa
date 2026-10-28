@@ -12,12 +12,13 @@ The item keeps a SHA-256 checksum of the tracker and a link to the app that regi
 
 ## Decision
 
-The tracker stays inside Tapa.app as `Contents/MacOS/TapaTracker`, but Tapa loads it as a classic per-user launch agent:
+The tracker is a helper app inside Tapa.app, `Contents/Library/LoginItems/TapaTracker.app`, and Tapa loads it as a classic per-user launch agent:
 
 - When Tapa opens, it writes `~/Library/LaunchAgents/id.tapa.tracker.plist` pointing at the tracker in its own bundle, with `RunAtLoad`, `KeepAlive` and `AssociatedBundleIdentifiers` set to `id.tapa.app`.
 - If the plist changed or the agent isn't loaded, Tapa runs `launchctl bootout` and `launchctl bootstrap gui/<uid>`. Otherwise it runs `launchctl kickstart -k`, so a new build replaces the running tracker.
 - A leftover `SMAppService` registration from ADR 0002 is unregistered first, since it holds the same label.
-- The tracker binary embeds its own Info.plist (`CFBundleName` Tapa and `NSAppleEventsUsageDescription`), so the Automation prompt names Tapa and says why.
+- The helper has its own Info.plist with `LSBackgroundOnly`, `CFBundleName` Tapa and `NSAppleEventsUsageDescription`, so the Automation prompt names Tapa and says why. The same plist is also embedded in the binary.
+- A binary in `Tapa.app/Contents/MacOS` is taken for part of Tapa.app and uses its Info.plist. The tracker then showed in the Dock as a second Tapa that came back when quit, since launchd restarts it. As a helper app of its own it stays background only.
 
 ## Evidence
 

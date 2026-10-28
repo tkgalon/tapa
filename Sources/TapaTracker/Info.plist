@@ -8,6 +8,12 @@
     <string>Tapa</string>
     <key>CFBundleDisplayName</key>
     <string>Tapa</string>
+    <key>CFBundleExecutable</key>
+    <string>TapaTracker</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSBackgroundOnly</key>
+    <true/>
     <key>LSUIElement</key>
     <true/>
     <key>NSAppleEventsUsageDescription</key>

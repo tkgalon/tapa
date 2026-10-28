@@ -16,7 +16,12 @@ rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp App/Info.plist "$app/Contents/Info.plist"
 cp "$bin/TapaApp" "$app/Contents/MacOS/Tapa"
-cp "$bin/TapaTracker" "$app/Contents/MacOS/TapaTracker"
+# The tracker is a helper app of its own, so macOS treats it as background only and never puts it
+# in the Dock, rather than as a second copy of Tapa.
+helper="$app/Contents/Library/LoginItems/TapaTracker.app"
+mkdir -p "$helper/Contents/MacOS"
+cp Sources/TapaTracker/Info.plist "$helper/Contents/Info.plist"
+cp "$bin/TapaTracker" "$helper/Contents/MacOS/TapaTracker"
 cp App/Resources/*.jpg "$app/Contents/Resources/"
 
 # Every size macOS asks for, cut from the one 1024 px icon.
@@ -32,5 +37,5 @@ iconutil -c icns "$iconset" -o "$app/Contents/Resources/AppIcon.icns"
 rm -rf "$work"
 
 # The tracker is signed on its own first, so the daemon can tell it apart from the app.
-codesign --force -s "$cert_name" -i id.tapa.tracker "$app/Contents/MacOS/TapaTracker"
+codesign --force -s "$cert_name" -i id.tapa.tracker "$helper"
 codesign --force -s "$cert_name" -i id.tapa.app "$app"
