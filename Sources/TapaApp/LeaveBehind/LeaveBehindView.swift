@@ -10,6 +10,10 @@ struct LeaveBehindView: View {
     @State private var isConfirmingRemoval = false
     @State private var isNamingList = false
     @State private var newListName = ""
+    @State private var renaming: LeaveBehindList?
+    @State private var renamedListName = ""
+    @State private var deleting: LeaveBehindList?
+    @State private var isConfirmingDelete = false
     @State private var failure: String?
     @State private var isShowingFailure = false
 
@@ -26,14 +30,28 @@ struct LeaveBehindView: View {
                 Button("New List") { isNamingList = true }
             }
 
-            HStack {
-                FilterPicker(filter: $filter, lists: config.leaveBehindLists, total: allEntryCount)
-                Spacer()
-                AddSiteField(lists: config.leaveBehindLists, preferredListID: filter.listID, add: add)
-            }
+            if config.leaveBehindLists.isEmpty {
+                noLists
+            } else {
+                HStack {
+                    FilterPicker(filter: $filter, lists: config.leaveBehindLists, total: allEntryCount)
+                    if let list = selectedList {
+                        ListActionsMenu(
+                            canDelete: !isLocked(list),
+                            rename: { startRenaming(list) },
+                            delete: { requestDeletion(of: list) }
+                        )
+                    }
+                    Spacer()
+                    AddSiteField(lists: config.leaveBehindLists, preferredListID: filter.listID, add: add)
+                }
 
-            SitesTable(entries: SiteEntry.entries(in: config, filter: filter), canRemove: !isSummitRunning) { entry in
-                requestRemoval(of: entry)
+                SitesTable(
+                    entries: SiteEntry.entries(in: config, filter: filter),
+                    canRemove: !isSummitRunning
+                ) { entry in
+                    requestRemoval(of: entry)
+                }
             }
 
             Text("""
@@ -66,6 +84,20 @@ struct LeaveBehindView: View {
             Button("Create", action: createList)
             Button("Cancel", role: .cancel) {}
         }
+        .alert("Rename List", isPresented: renamingBinding, presenting: renaming) { list in
+            TextField("Name", text: $renamedListName)
+            Button("Rename") { rename(list) }
+            Button("Cancel", role: .cancel) {}
+        }
+        .confirmationDialog(
+            "Delete \(deleting?.name ?? "")?",
+            isPresented: $isConfirmingDelete,
+            presenting: deleting
+        ) { list in
+            Button("Delete List", role: .destructive) { delete(list) }
+        } message: { list in
+            Text(deletionMessage(for: list))
+        }
         .alert("Couldn't Save Leave Behind", isPresented: $isShowingFailure, presenting: failure) { _ in
             Button("OK") {}
         } message: { failure in
@@ -83,6 +115,86 @@ struct LeaveBehindView: View {
 
     private var isSummitRunning: Bool {
         daemon.snapshot?.mode == .summit
+    }
+
+    private var noLists: some View {
+        ContentUnavailableView {
+            Label("No Lists Yet", systemImage: "nosign")
+        } description: {
+            Text("A list holds the websites to leave behind. Begin Ascent and Rituals need one.")
+        } actions: {
+            Button("New List") { isNamingList = true }
+                .buttonStyle(.borderedProminent)
+                .tint(.glacier)
+        }
+        .frame(maxHeight: .infinity)
+    }
+
+    private var selectedList: LeaveBehindList? {
+        filter.listID.flatMap { id in config.leaveBehindLists.first { $0.id == id } }
+    }
+
+    private var renamingBinding: Binding<Bool> {
+        Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })
+    }
+
+    /// Summit Mode holds the lists it enforces until it ends.
+    private func isLocked(_ list: LeaveBehindList) -> Bool {
+        isSummitRunning && daemon.activeLists.contains { $0.id == list.id }
+    }
+
+    private func startRenaming(_ list: LeaveBehindList) {
+        renamedListName = list.name
+        renaming = list
+    }
+
+    private func rename(_ list: LeaveBehindList) {
+        let name = renamedListName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, let index = config.leaveBehindLists.firstIndex(where: { $0.id == list.id }) else {
+            return
+        }
+        var updated = config
+        updated.leaveBehindLists[index].name = name
+        apply(updated)
+    }
+
+    /// A Ritual can't be left without a list, so the user picks another one for it first.
+    private func requestDeletion(of list: LeaveBehindList) {
+        let stranded = config.ritualsOnlyUsing(list.id).map(\.name)
+        guard stranded.isEmpty else {
+            failure = String(localized: """
+                \(list.name) is the only list for \(stranded.formatted(.list(type: .and))). Pick another \
+                list in Rituals first.
+                """)
+            isShowingFailure = true
+            return
+        }
+        deleting = list
+        isConfirmingDelete = true
+    }
+
+    private func deletionMessage(for list: LeaveBehindList) -> String {
+        let leaving = config.websitesOnlyIn(list.id).count
+        let kept = list.domains.count - leaving
+        var parts = [String]()
+        if leaving > 0 {
+            parts.append(String(localized: "^[\(leaving) website](inflect: true) only in this list will be removed."))
+        }
+        if kept > 0 {
+            parts.append(String(localized: "^[\(kept) website](inflect: true) also in other lists will stay there."))
+        }
+        let rituals = config.rituals(using: [list.id]).map(\.name)
+        if !rituals.isEmpty {
+            parts.append(String(localized: "It will be taken out of \(rituals.formatted(.list(type: .and)))."))
+        }
+        return parts.isEmpty ? String(localized: "This list is empty.") : parts.joined(separator: " ")
+    }
+
+    private func delete(_ list: LeaveBehindList) {
+        var updated = config
+        updated.deleteList(list.id)
+        filter = .all
+        apply(updated)
     }
 
     private func removalTitle(for removal: PendingRemoval) -> String {
