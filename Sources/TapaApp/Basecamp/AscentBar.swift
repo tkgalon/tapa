@@ -5,7 +5,8 @@ import TapaCore
 struct AscentBar: View {
     @Environment(DaemonStore.self) private var daemon
 
-    @State private var mode = SessionMode.summit
+    /// Trail by default, so Summit Mode is always a deliberate choice.
+    @State private var mode = SessionMode.trail
     @State private var endTimes: [Date]
     @State private var endAt: Date
     @State private var listIDs: Set<LeaveBehindList.ID> = []
