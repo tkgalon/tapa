@@ -12,15 +12,17 @@ struct ContentView: View {
                 .safeAreaPadding(.leading, reservesSidebarSpace ? SidebarPanel.occupiedWidth : 0)
 
             // Kept in place and slid aside, because inserting and removing glass doesn't animate.
-            SidebarPanel(selection: $selection)
+            SidebarPanel(selection: $selection, isFullHeight: !(selection ?? .basecamp).isImmersive)
                 .offset(x: isSidebarVisible ? 0 : -SidebarPanel.occupiedWidth)
                 .disabled(!isSidebarVisible)
                 .accessibilityHidden(!isSidebarVisible)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .animation(Self.sidebarAnimation, value: isSidebarVisible)
         .toolbar {
             SidebarToggle(isSidebarVisible: isSidebarVisible) { isSidebarVisible.toggle() }
         }
+        .transparentToolbar()
         .frame(minWidth: WindowSize.minimum.width, minHeight: WindowSize.minimum.height)
     }
 

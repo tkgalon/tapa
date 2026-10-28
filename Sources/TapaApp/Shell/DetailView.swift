@@ -22,6 +22,7 @@ struct DetailView: View {
                 systemImage: item.systemImage,
                 description: Text("This screen arrives in a later step.")
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

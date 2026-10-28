@@ -43,6 +43,5 @@ struct BasecampView: View {
                     .ignoresSafeArea(edges: .top)
             }
         }
-        .photoToolbar()
     }
 }
