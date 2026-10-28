@@ -27,7 +27,10 @@ struct RitualsView: View {
                                 edit(ritual, isNew: false)
                             }
                         }
-                        list
+                        // Each minute, so "Ended for today" goes once the Ritual's time is over.
+                        TimelineView(.everyMinute) { context in
+                            list(at: context.date)
+                        }
                         Text("Changing a Summit Mode Ritual asks for The Summit Oath again.")
                             .font(.callout)
                             .foregroundStyle(.secondary)
@@ -78,7 +81,7 @@ struct RitualsView: View {
         .frame(maxWidth: 760)
     }
 
-    private var list: some View {
+    private func list(at now: Date) -> some View {
         VStack(spacing: 0) {
             ForEach(Array(rituals.enumerated()), id: \.element.id) { index, ritual in
                 RitualRow(
@@ -86,7 +89,8 @@ struct RitualsView: View {
                     color: .ritual(at: index),
                     listNames: listNames(for: ritual),
                     isRunning: ritual.isRunning(in: daemon.snapshot),
-                    isLocked: ritual.isLocked(by: daemon.snapshot)
+                    isLocked: ritual.isLocked(by: daemon.snapshot),
+                    startsAgain: startsAgain(ritual, at: now)
                 ) {
                     edit(ritual, isNew: false)
                 } setEnabled: { isOn in
@@ -122,6 +126,13 @@ struct RitualsView: View {
             .filter { ritual.leaveBehindIDs.contains($0.id) }
             .map(\.name)
             .formatted(.list(type: .and))
+    }
+
+    private func startsAgain(_ ritual: Ritual, at now: Date) -> String? {
+        guard ritual.hasEnded(in: daemon.snapshot, at: now),
+              let next = ritual.nextOccurrence(after: now, calendar: .current)
+        else { return nil }
+        return next.start.ritualStart(from: now)
     }
 
     private func edit(_ ritual: Ritual, isNew: Bool) {
