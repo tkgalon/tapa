@@ -19,10 +19,12 @@ cp "$bin/TapaApp" "$app/Contents/MacOS/Tapa"
 # The tracker is a helper app of its own, so macOS treats it as background only and never puts it
 # in the Dock, rather than as a second copy of Tapa.
 helper="$app/Contents/Library/LoginItems/TapaTracker.app"
-mkdir -p "$helper/Contents/MacOS"
+mkdir -p "$helper/Contents/MacOS" "$helper/Contents/Resources"
 cp Sources/TapaTracker/Info.plist "$helper/Contents/Info.plist"
 cp "$bin/TapaTracker" "$helper/Contents/MacOS/TapaTracker"
 cp App/Resources/*.jpg "$app/Contents/Resources/"
+# Mist is served by the tracker, so its photos live in the helper's bundle too.
+cp App/Resources/mist-*.jpg "$helper/Contents/Resources/"
 
 # Every size macOS asks for, cut from the one 1024 px icon.
 work=$(mktemp -d)
