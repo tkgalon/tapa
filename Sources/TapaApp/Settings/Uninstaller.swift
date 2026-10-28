@@ -35,9 +35,10 @@ enum Uninstaller {
 
         try? SMAppService.mainApp.unregister()
         run("/bin/launchctl", ["bootout", "gui/\(getuid())/id.tapa.tracker"])
-        let agent = FileManager.default.homeDirectoryForCurrentUser
-            .appending(path: "Library/LaunchAgents/id.tapa.tracker.plist")
-        try? FileManager.default.removeItem(at: agent)
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        try? FileManager.default.removeItem(at: home.appending(path: "Library/LaunchAgents/id.tapa.tracker.plist"))
+        // The tracker is stopped now, so nothing writes Screen Time back after it's removed.
+        try? FileManager.default.removeItem(at: home.appending(path: "Library/Application Support/Tapa"))
         run("/usr/bin/security", ["delete-identity", "-c", certificateName])
     }
 
