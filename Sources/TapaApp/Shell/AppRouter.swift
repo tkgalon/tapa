@@ -9,6 +9,8 @@ final class AppRouter {
     var selection: SidebarItem? = .basecamp
     var pendingOath: PendingOath?
     var isShowingDescent = false
+    /// Set by Choose Time… so Basecamp opens its end times. Basecamp clears it once they show.
+    var isChoosingEndTime = false
     var failure: String?
     var isShowingFailure = false
 

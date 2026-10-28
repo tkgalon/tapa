@@ -24,7 +24,7 @@ struct TapaApp: App {
             MenuBarLabel()
                 .environment(daemon)
         }
-        .menuBarExtraStyle(.menu)
+        .menuBarExtraStyle(.window)
 
         Settings {
             SettingsView()
