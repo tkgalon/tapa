@@ -16,6 +16,7 @@ struct RitualWeek: View {
     private let usualFirstMinute = 6 * 60
     private let hourMarkStep = 3
     private let laneGap: CGFloat = 2
+    private static let labelHeight: CGFloat = 14
 
     var body: some View {
         let today = Weekday.today()
@@ -39,6 +40,8 @@ struct RitualWeek: View {
             }
             .frame(height: chartHeight)
             .background(alignment: .topLeading) { hourLines }
+            // Room for the 00.00 label, centred on the last line.
+            .padding(.bottom, 6)
         }
         .padding(12)
         .background(.background, in: .rect(cornerRadius: 12))
@@ -60,18 +63,21 @@ struct RitualWeek: View {
     private var hourMarks: [Int] {
         let firstHour = firstMinute / 60
         let start = (firstHour + hourMarkStep - 1) / hourMarkStep * hourMarkStep
-        return Array(stride(from: start, to: 24, by: hourMarkStep))
+        // Through 24, so a line closes the day at its foot.
+        return Array(stride(from: start, through: 24, by: hourMarkStep))
     }
 
     private var hourLabels: some View {
         ZStack(alignment: .topTrailing) {
             ForEach(hourMarks, id: \.self) { hour in
-                let lineY = y(forMinute: hour * 60)
-                Text(TimeOfDay(hour: hour)?.formatted() ?? "")
+                // Offset rather than an alignment guide: guides line the labels up with each other,
+                // not with the top of the chart, which left every label half its height low.
+                Text((TimeOfDay(hour: hour % 24) ?? .midnight).formatted())
                     .font(.caption2)
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
-                    .alignmentGuide(.top) { label in label.height / 2 - lineY }
+                    .frame(height: Self.labelHeight)
+                    .offset(y: y(forMinute: hour * 60) - Self.labelHeight / 2)
             }
         }
         .frame(width: gutterWidth, height: chartHeight, alignment: .topTrailing)
