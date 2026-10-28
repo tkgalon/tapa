@@ -39,6 +39,26 @@ public struct DaemonConfig: Codable, Hashable, Sendable {
         leaveBehindLists[index].domains.append(domain)
     }
 
+    /// The websites in the list that no other list holds, which go with it when it's deleted.
+    public func websitesOnlyIn(_ listID: LeaveBehindList.ID) -> [DomainName] {
+        let others = Set(leaveBehindLists.filter { $0.id != listID }.flatMap(\.domains))
+        let list = leaveBehindLists.first { $0.id == listID }
+        return (list?.domains ?? []).filter { !others.contains($0) }
+    }
+
+    /// The Rituals that use no other list, so deleting this one would leave them with none.
+    public func ritualsOnlyUsing(_ listID: LeaveBehindList.ID) -> [Ritual] {
+        rituals.filter { $0.leaveBehindIDs == [listID] }
+    }
+
+    /// Deletes the list and takes it out of every Ritual. Websites also in other lists stay there.
+    public mutating func deleteList(_ listID: LeaveBehindList.ID) {
+        leaveBehindLists.removeAll { $0.id == listID }
+        for index in rituals.indices {
+            rituals[index].leaveBehindIDs.remove(listID)
+        }
+    }
+
     /// Removes `domain` from each of the lists. Other lists keep it.
     public mutating func remove(_ domain: DomainName, fromLists listIDs: Set<LeaveBehindList.ID>) {
         for index in leaveBehindLists.indices where listIDs.contains(leaveBehindLists[index].id) {

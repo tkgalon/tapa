@@ -58,6 +58,34 @@ struct DaemonConfigTests {
         #expect(config.websiteCount(in: []) == 0)
     }
 
+    @Test func deletingAListKeepsWebsitesThatOtherListsHold() {
+        var config = config
+        let tiktok = DomainName("tiktok.com")!
+        #expect(config.websitesOnlyIn(social.id) == [tiktok])
+
+        config.deleteList(social.id)
+        #expect(config.leaveBehindLists.map(\.name) == ["Video", "Work"])
+        #expect(config.lists(containing: reddit).map(\.name) == ["Work"])
+        #expect(config.lists(containing: tiktok).isEmpty)
+    }
+
+    @Test func deletingAListTakesItOutOfRituals() {
+        var config = config
+        let work = config.leaveBehindLists[2]
+        config.rituals[0].leaveBehindIDs.insert(video.id)
+        config.deleteList(work.id)
+        #expect(config.rituals[0].leaveBehindIDs == [video.id])
+    }
+
+    @Test func findsRitualsThatWouldBeLeftWithoutAList() {
+        var config = config
+        let work = config.leaveBehindLists[2]
+        #expect(config.ritualsOnlyUsing(work.id).map(\.name) == ["Work Time"])
+
+        config.rituals[0].leaveBehindIDs.insert(social.id)
+        #expect(config.ritualsOnlyUsing(work.id).isEmpty)
+    }
+
     @Test func savesARitualInPlaceOrAtTheEnd() {
         var config = config
         var workTime = config.rituals[0]
