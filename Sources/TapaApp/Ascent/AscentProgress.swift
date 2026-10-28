@@ -81,7 +81,8 @@ private struct AscentTrail: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let length = proxy.size.width - flagWidth
+            let width = proxy.size.width
+            let length = width - flagWidth
             let walked = length * progress
 
             ZStack(alignment: .topLeading) {
@@ -134,7 +135,7 @@ private struct AscentTrail: View {
                     .foregroundStyle(.white)
                     .fixedSize()
                     .alignmentGuide(.leading) { label in
-                        -min(max(walked - label.width / 2, 0), proxy.size.width - label.width)
+                        -min(max(walked - label.width / 2, 0), width - label.width)
                     }
             }
         }
