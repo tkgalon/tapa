@@ -13,41 +13,55 @@ struct AscentView: View {
     @State private var isShowingFailure = false
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             PhotoBackdrop(photo: .summit)
 
-            VStack(spacing: 4) {
-                Text(modeTitle)
-                    .font(.system(size: 13 * scale, weight: .semibold))
+            // Darkens the foot of the photo, like the mist in the mockup, so the white text reads.
+            LinearGradient(
+                colors: [.clear, Color(red: 0.02, green: 0.08, blue: 0.19).opacity(0.55)],
+                startPoint: .center,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+            .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 16 * scale) {
+                AscentModeChip(
+                    mode: snapshot.mode ?? .trail,
+                    isRestStop: snapshot.state == .restStop,
+                    ritualName: ritualName
+                )
+
                 if let target = countdownTarget {
-                    TimelineView(.periodic(from: .now, by: 1)) { context in
-                        Text(remaining(until: target, from: context.date))
-                            .font(.system(size: 72 * scale, weight: .semibold, design: .rounded))
-                            .monospacedDigit()
+                    VStack(alignment: .leading, spacing: 0) {
+                        TimelineView(.periodic(from: .now, by: 1)) { context in
+                            // Proportional digits: tabular ones centre a narrow 1 in a wide slot, which
+                            // pulls the left edge in from the caption below.
+                            Text(remaining(until: target, from: context.date))
+                                .font(.system(size: 72 * scale, weight: .semibold, design: .rounded))
+                        }
+                        Text(countdownCaption(for: target))
+                            .font(.system(size: 20 * scale, design: .serif))
                     }
-                    Text(countdownCaption(for: target))
-                        .font(.system(size: 17 * scale, design: .serif))
+                    .foregroundStyle(.white)
+                    .shadow(color: Color(red: 0.02, green: 0.08, blue: 0.19).opacity(0.45), radius: 8, y: 1)
+                    .accessibilityElement(children: .combine)
                 }
+
+                if let startAt, let endAt = snapshot.endsAt {
+                    AscentProgress(startAt: startAt, endAt: endAt, isSummit: snapshot.mode == .summit)
+                }
+
+                AscentFactsCard(leaveBehind: leaveBehindSummary, restStops: restStopsSummary)
             }
-            .foregroundStyle(.white)
-            .shadow(color: Color(red: 0.02, green: 0.08, blue: 0.19).opacity(0.45), radius: 8, y: 1)
-            .accessibilityElement(children: .combine)
+            .frame(maxWidth: 620 * scale)
+            .padding(.horizontal, 32)
+            .padding(.bottom, 32 * scale)
         }
         .onGeometryChange(for: CGFloat.self) { proxy in
             HeroScale.factor(for: proxy.size)
         } action: { factor in
             scale = factor
-        }
-        .overlay(alignment: .bottom) {
-            if let startAt, let endAt = snapshot.endsAt {
-                AscentProgressCard(
-                    startAt: startAt,
-                    endAt: endAt,
-                    leaveBehind: leaveBehindSummary,
-                    restStops: restStopsSummary
-                )
-                .padding(.bottom, 32 * scale)
-            }
         }
         .overlay(alignment: .topTrailing) {
             actions
@@ -85,12 +99,14 @@ struct AscentView: View {
         .buttonStyle(.glassIfAvailable)
     }
 
-    private var modeTitle: LocalizedStringKey {
-        switch (snapshot.state, snapshot.mode) {
-        case (.restStop, _): "☕️ Rest Stop"
-        case (_, .summit): "🏔️ Summit Mode"
-        default: "🥾 Trail"
+    /// The Ritual that started the Ascent, when one did.
+    private var ritualName: String? {
+        for session in snapshot.activeSessions {
+            if case .ritual(let id) = session.source {
+                return daemon.config.rituals.first { $0.id == id }?.name
+            }
         }
+        return nil
     }
 
     /// During a Rest Stop the countdown is to the end of the stop, otherwise to the end of the Ascent.
@@ -100,9 +116,11 @@ struct AscentView: View {
 
     private func countdownCaption(for target: Date) -> String {
         let time = target.formatted(.dateTime.hour().minute())
-        return snapshot.state == .restStop
-            ? String(localized: "back on the Trail at \(time)")
-            : String(localized: "to the summit, at \(time)")
+        switch (snapshot.state, snapshot.mode) {
+        case (.restStop, _): return String(localized: "back on the Trail at \(time)")
+        case (_, .summit): return String(localized: "to the summit, at \(time)")
+        default: return String(localized: "left on the Trail, until \(time)")
+        }
     }
 
     private var startAt: Date? {
