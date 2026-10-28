@@ -34,11 +34,19 @@ enum Uninstaller {
         try runAsAdministrator(commands.joined(separator: "; "))
 
         try? SMAppService.mainApp.unregister()
-        let security = Process()
-        security.executableURL = URL(fileURLWithPath: "/usr/bin/security")
-        security.arguments = ["delete-identity", "-c", certificateName]
-        try? security.run()
-        security.waitUntilExit()
+        run("/bin/launchctl", ["bootout", "gui/\(getuid())/id.tapa.tracker"])
+        let agent = FileManager.default.homeDirectoryForCurrentUser
+            .appending(path: "Library/LaunchAgents/id.tapa.tracker.plist")
+        try? FileManager.default.removeItem(at: agent)
+        run("/usr/bin/security", ["delete-identity", "-c", certificateName])
+    }
+
+    private static func run(_ path: String, _ arguments: [String]) {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: path)
+        process.arguments = arguments
+        try? process.run()
+        process.waitUntilExit()
     }
 
     @MainActor

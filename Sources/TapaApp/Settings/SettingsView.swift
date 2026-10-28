@@ -42,9 +42,9 @@ struct SettingsView: View {
             }
 
             Section {
-                ForEach(Photo.allCases, id: \.self) { photo in
-                    LabeledContent(photo.screen) {
-                        Text(verbatim: "\(photo.photographer), Unsplash")
+                ForEach(PhotoCredit.all) { credit in
+                    LabeledContent(credit.screen) {
+                        Text(verbatim: "\(credit.photographer), Unsplash")
                     }
                 }
             } header: {

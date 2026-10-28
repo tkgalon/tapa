@@ -34,3 +34,18 @@ enum Photo: String, CaseIterable {
         }
     )
 }
+
+/// Who took each bundled photo, for Settings. The Mist photos are served by the tracker, so they
+/// aren't loaded here.
+struct PhotoCredit: Identifiable {
+    let screen: LocalizedStringKey
+    let photographer: String
+
+    var id: String { photographer }
+
+    static var all: [PhotoCredit] {
+        Photo.allCases.map { PhotoCredit(screen: $0.screen, photographer: $0.photographer) }
+            + ["Paul Pastourmatzis", "David Jusko", "Tobias Kebernik", "Tyler Lastovich"]
+            .map { PhotoCredit(screen: "Mist", photographer: $0) }
+    }
+}

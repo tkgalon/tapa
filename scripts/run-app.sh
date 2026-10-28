@@ -16,15 +16,17 @@ bin=$(swift build --show-bin-path)
 
 app=.build/Tapa.app
 rm -rf "$app"
-mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" "$app/Contents/Library/LaunchAgents"
+mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp App/Info.plist "$app/Contents/Info.plist"
 cp "$bin/TapaApp" "$app/Contents/MacOS/Tapa"
 cp "$bin/TapaTracker" "$app/Contents/MacOS/TapaTracker"
-cp App/LaunchAgents/id.tapa.tracker.plist "$app/Contents/Library/LaunchAgents/"
 cp App/Resources/*.jpg "$app/Contents/Resources/"
 # The tracker is signed on its own first, so the daemon can tell it apart from the app.
 codesign --force -s "$cert_name" -i id.tapa.tracker "$app/Contents/MacOS/TapaTracker"
 codesign --force -s "$cert_name" -i id.tapa.app "$app"
 
+# The app restarts the tracker from the new bundle when it opens.
 pkill -x Tapa 2>/dev/null || true
+sleep 1
+
 open "$app"
