@@ -17,6 +17,20 @@ public struct DaemonConfig: Codable, Hashable, Sendable {
         rituals.filter { !$0.leaveBehindIDs.isDisjoint(with: listIDs) }
     }
 
+    /// The websites across the lists, each counted once however many lists hold it.
+    public func websiteCount(in listIDs: Set<LeaveBehindList.ID>) -> Int {
+        Set(leaveBehindLists.filter { listIDs.contains($0.id) }.flatMap(\.domains)).count
+    }
+
+    /// Replaces the Ritual with the same ID, or adds it at the end.
+    public mutating func save(_ ritual: Ritual) {
+        if let index = rituals.firstIndex(where: { $0.id == ritual.id }) {
+            rituals[index] = ritual
+        } else {
+            rituals.append(ritual)
+        }
+    }
+
     /// Adds `domain` to the list. Does nothing when the list already holds it or doesn't exist.
     public mutating func add(_ domain: DomainName, toList listID: LeaveBehindList.ID) {
         guard let index = leaveBehindLists.firstIndex(where: { $0.id == listID }),
