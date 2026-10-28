@@ -55,10 +55,7 @@ struct LeaveBehindView: View {
                 }
             }
 
-            Text("""
-                During Summit Mode you can add websites to a list, but not remove them. Apps like Discord \
-                or games arrive in v1.1.
-                """)
+            Text("During Summit Mode you can add websites to a list, but not remove them.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
