@@ -15,45 +15,71 @@ struct BasecampMenu: View {
 
     var body: some View {
         let now = Date.now
-        Text("⛺️ Basecamp")
-        Divider()
-
-        Section("Begin Ascent") {
-            ForEach(Array(EndTimeChoices.after(now).prefix(3).enumerated()), id: \.element) { index, time in
-                Button(title(until: time, now: now, isFirst: index == 0)) { begin(until: time) }
-                    .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")))
-                    .disabled(listIDs.isEmpty)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 10) {
+                Text(verbatim: "⛺️")
+                    .font(.title2)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Basecamp")
+                        .fontWeight(.semibold)
+                    Text("No Ascent right now")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
             }
-            Button("Choose Time…") {
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            PanelDivider()
+
+            PanelHeading("Begin Ascent")
+            ForEach(Array(EndTimeChoices.after(now).prefix(3).enumerated()), id: \.element) { index, time in
+                PanelButton(
+                    title: title(until: time, now: now, isFirst: index == 0),
+                    trailing: Text(verbatim: "⌘\(index + 1)")
+                ) {
+                    begin(until: time)
+                }
+                .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")))
+                .disabled(listIDs.isEmpty)
+            }
+            PanelButton("Choose Time…") {
                 router.selection = .basecamp
+                router.isChoosingEndTime = true
                 openTapa()
             }
-        }
-        Divider()
+            PanelDivider()
 
-        Picker("Mode", selection: $mode) {
-            Text("🥾 Trail").tag(SessionMode.trail)
-            Text("🏔️ Summit Mode").tag(SessionMode.summit)
-        }
-        .pickerStyle(.inline)
+            PanelHeading("Mode")
+            PanelButton("🥾 Trail", isChecked: mode == .trail) { mode = .trail }
+            PanelButton("🏔️ Summit Mode", isChecked: mode == .summit) { mode = .summit }
+            PanelDivider()
 
-        Menu("Leave Behind: \(listSummary)") {
+            PanelHeading("Leave Behind")
             if daemon.config.leaveBehindLists.isEmpty {
-                Button("Create a List in Leave Behind…") {
+                PanelButton("Create a List in Leave Behind…") {
                     router.selection = .leaveBehind
                     openTapa()
                 }
             }
             ForEach(daemon.config.leaveBehindLists) { list in
-                Toggle(list.name, isOn: Binding(get: { listIDs.contains(list.id) }, set: { setList(list.id, $0) }))
+                PanelButton(title: Text(list.name), isChecked: listIDs.contains(list.id)) {
+                    setList(list.id, !listIDs.contains(list.id))
+                }
             }
-        }
-        Divider()
+            PanelDivider()
 
-        if let upcoming = daemon.upNext(after: now) {
-            Text("Next Ritual: \(upcoming.ritual.name) \(upcoming.interval.start.ritualStart(from: now))")
+            VStack(alignment: .leading, spacing: 4) {
+                if let upcoming = daemon.upNext(after: now) {
+                    Text("Next Ritual: \(upcoming.ritual.name) \(upcoming.interval.start.ritualStart(from: now))")
+                }
+                Text("^[\(daemon.snapshot?.descentsRemaining ?? 0) Descent](inflect: true) left this week")
+            }
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
         }
-        Text("^[\(daemon.snapshot?.descentsRemaining ?? 0) Descent](inflect: true) left this week")
     }
 
     /// The lists chosen last time that still exist, or the first list when none do.
@@ -64,11 +90,6 @@ struct BasecampMenu: View {
         return chosen.isEmpty ? Set(lists.prefix(1).map(\.id)) : chosen
     }
 
-    private var listSummary: String {
-        let names = daemon.config.leaveBehindLists.filter { listIDs.contains($0.id) }.map(\.name)
-        return names.isEmpty ? String(localized: "None") : names.formatted(.list(type: .and))
-    }
-
     private func setList(_ id: LeaveBehindList.ID, _ isOn: Bool) {
         var ids = listIDs
         ids[contains: id] = isOn
@@ -76,15 +97,16 @@ struct BasecampMenu: View {
     }
 
     /// "Until 10.00 · 18 min" for the nearest hour, so a short Ascent is obvious.
-    private func title(until time: Date, now: Date, isFirst: Bool) -> String {
-        let until = String(localized: "Until \(time.formatted(.dateTime.hour().minute()))")
+    private func title(until time: Date, now: Date, isFirst: Bool) -> Text {
+        let until = Text("Until \(time.formatted(.dateTime.hour().minute()))")
         guard isFirst else { return until }
         let length = Duration.seconds(time.timeIntervalSince(now))
             .formatted(.units(allowed: [.hours, .minutes], width: .abbreviated))
-        return "\(until) · \(length)"
+        return Text("\(until) \(Text("· \(length)").foregroundStyle(.secondary))")
     }
 
     private func begin(until endAt: Date) {
+        MenuBarPanel.close()
         let request = StartRequest(mode: mode, endAt: endAt, leaveBehindIDs: listIDs)
         guard mode == .trail else {
             router.takeOath(for: request)
