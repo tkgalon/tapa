@@ -6,6 +6,14 @@ enum Photo: String, CaseIterable {
     case basecamp = "basecamp-tents"
     case summit = "clouds-over-peak"
 
+    /// Where the photo appears, for its credit in Settings.
+    var screen: LocalizedStringKey {
+        switch self {
+        case .basecamp: "Basecamp"
+        case .summit: "Ascent"
+        }
+    }
+
     var photographer: String {
         switch self {
         case .basecamp: "Koushik Roy"

@@ -42,6 +42,19 @@ struct SettingsView: View {
             }
 
             Section {
+                ForEach(Photo.allCases, id: \.self) { photo in
+                    LabeledContent(photo.screen) {
+                        Text(verbatim: "\(photo.photographer), Unsplash")
+                    }
+                }
+            } header: {
+                Text("Photos")
+            } footer: {
+                Link("Unsplash License", destination: URL(string: "https://unsplash.com/license")!)
+                    .font(.callout)
+            }
+
+            Section {
                 LabeledContent("Background Service") {
                     Text(serviceStatus)
                 }

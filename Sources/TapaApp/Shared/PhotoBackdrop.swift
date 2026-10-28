@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// A full-bleed photo with its credit, darkened at the top so white text reads over the sky.
+/// A full-bleed photo, darkened at the top so white text reads over the sky. Its credit is in
+/// Settings.
 struct PhotoBackdrop: View {
     let photo: Photo
 
@@ -21,11 +22,5 @@ struct PhotoBackdrop: View {
             .clipped()
             .ignoresSafeArea()
             .accessibilityHidden(true)
-            .overlay(alignment: .bottomTrailing) {
-                Text("Photo: \(photo.photographer), Unsplash")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .padding(8)
-            }
     }
 }
