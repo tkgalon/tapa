@@ -50,4 +50,28 @@ struct DaemonConfigTests {
         config.remove(reddit, fromLists: all)
         #expect(config.lists(containing: reddit).isEmpty)
     }
+
+    @Test func countsAWebsiteInSeveralListsOnce() {
+        let config = config
+        let work = config.leaveBehindLists[2]
+        #expect(config.websiteCount(in: [social.id, work.id]) == 3)
+        #expect(config.websiteCount(in: []) == 0)
+    }
+
+    @Test func savesARitualInPlaceOrAtTheEnd() {
+        var config = config
+        var workTime = config.rituals[0]
+        workTime.name = "Deep Work"
+        config.save(workTime)
+        let reading = Ritual(
+            name: "Reading",
+            days: [.saturday],
+            startTime: time(20),
+            endTime: time(22),
+            mode: .trail,
+            leaveBehindIDs: [video.id]
+        )
+        config.save(reading)
+        #expect(config.rituals.map(\.name) == ["Deep Work", "Reading"])
+    }
 }

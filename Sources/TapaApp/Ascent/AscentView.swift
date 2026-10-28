@@ -130,7 +130,7 @@ struct AscentView: View {
     private var leaveBehindSummary: Text {
         let ids = Set(snapshot.activeSessions.flatMap(\.leaveBehindIDs))
         let lists = daemon.config.leaveBehindLists.filter { ids.contains($0.id) }
-        let websites = Set(lists.flatMap(\.domains)).count
+        let websites = daemon.config.websiteCount(in: ids)
         let names = lists.map(\.name).formatted(.list(type: .and))
         return Text("\(names) · ^[\(websites) website](inflect: true)")
     }
