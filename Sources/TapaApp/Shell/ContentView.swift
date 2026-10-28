@@ -36,6 +36,10 @@ struct ContentView: View {
                 summitEndsAt: daemon.snapshot?.endsAt
             )
         }
+        .onOpenURL { url in
+            router.open(url)
+            NSApp.activate()
+        }
         .alert("Couldn't Change the Ascent", isPresented: $router.isShowingFailure, presenting: router.failure) { _ in
             Button("OK") {}
         } message: { failure in

@@ -1,3 +1,4 @@
+import Foundation
 import Observation
 import TapaCore
 
@@ -22,6 +23,13 @@ final class AppRouter {
     func showDescent() {
         selection = .basecamp
         isShowingDescent = true
+    }
+
+    /// A tapa:// link, opened by the tracker from Mist. Any website could open one too, so it only
+    /// shows the Ascent and never acts.
+    func open(_ url: URL) {
+        guard url.scheme == "tapa" else { return }
+        selection = .basecamp
     }
 
     func report(_ error: any Error) {

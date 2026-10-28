@@ -1,14 +1,15 @@
 import Foundation
 import TapaCore
 
-/// The page a blocked tab lands on: a misty photo, the site, a quiet line, how long is left, and a
-/// way back. While it's open it asks the tracker whether the site is still blocked, and returns to
-/// where the tab was once it isn't.
+/// The page a blocked tab lands on: a misty photo, a quiet line, how long is left, and a way back.
+/// While it's open it asks the tracker whether the site is still blocked, and returns to where the
+/// tab was once it isn't.
 struct MistPage {
     let site: DomainName
     let returnAddress: String?
     let snapshot: SessionSnapshot?
     let photo: String
+    let openToken: String
 
     static let photos = ["mist-peaks-in-fog", "mist-sea-of-clouds", "mist-peak-above-clouds", "mist-bed-of-clouds"]
 
@@ -35,24 +36,27 @@ struct MistPage {
         let endsAt = snapshot?.endsAt.map { Int($0.timeIntervalSince1970 * 1000) }
         return Self.template
             .replacingOccurrences(of: "{{photo}}", with: Self.escaped(photo))
-            .replacingOccurrences(of: "{{site}}", with: Self.escaped(site.value))
             .replacingOccurrences(of: "{{line}}", with: Self.escaped(line))
             .replacingOccurrences(of: "{{actions}}", with: actions)
             .replacingOccurrences(of: "{{siteJSON}}", with: Self.jsonString(site.value))
             .replacingOccurrences(of: "{{endsAt}}", with: endsAt.map(String.init) ?? "null")
+            // Formatted here, like the app, rather than in the browser's own language.
+            .replacingOccurrences(
+                of: "{{until}}",
+                with: Self.jsonString(snapshot?.endsAt?.formatted(.dateTime.hour().minute()) ?? "")
+            )
             .replacingOccurrences(of: "{{isSummit}}", with: isSummit ? "true" : "false")
+            .replacingOccurrences(of: "{{token}}", with: Self.jsonString(openToken))
             // Last, since the address comes from the tab and could hold a placeholder of its own.
             .replacingOccurrences(of: "{{returnJSON}}", with: returnAddress.map(Self.jsonString) ?? "null")
     }
 
-    /// Stay on Your Path, then the way out that fits the mode. Both open a confirmation in Tapa.
+    /// Stay on Your Path, and on a Trail a way to Tapa. Summit Mode offers no way out here, where
+    /// the pull is strongest: a Descent needs Tapa opened on purpose.
     private var actions: String {
         let stay = #"<button type="button" class="primary" onclick="stay()">Stay on Your Path</button>"#
-        if isSummit {
-            let left = snapshot?.descentsRemaining ?? 0
-            return stay + #"<a class="secondary" href="tapa://descent">Descent <span>\#(left) left</span></a>"#
-        }
-        return stay + #"<a class="secondary" href="tapa://rest-stop">Take a Rest Stop</a>"#
+        guard !isSummit else { return stay }
+        return stay + #"<button type="button" class="secondary" onclick="openTapa()">Open Tapa</button>"#
     }
 
     private static func escaped(_ text: String) -> String {
@@ -87,10 +91,6 @@ struct MistPage {
           mask-image: linear-gradient(#000 50%, transparent); }
         main { position: relative; max-width: 640px; display: flex; flex-direction: column;
           align-items: center; gap: 16px; text-align: center; }
-        .site { display: inline-flex; align-items: center; gap: 8px; min-height: 28px; padding: 0 12px;
-          border-radius: 14px; background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px); box-shadow: 0 0 0 1px rgba(14, 26, 36, 0.08);
-          font-size: 13px; color: #2E3E4C; }
         h1 { margin: 0; font-family: ui-serif, "New York", Georgia, serif; font-size: 48px; line-height: 56px;
           font-weight: 500; letter-spacing: -0.01em; }
         p { margin: 0; font-size: 17px; line-height: 24px; color: #2E3E4C; }
@@ -101,18 +101,11 @@ struct MistPage {
         .primary { background: #13212E; color: #FFFFFF; font-weight: 600; }
         .secondary { background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px); box-shadow: 0 0 0 1px rgba(14, 26, 36, 0.1); color: #0E1A24; }
-        .secondary span { color: #4A5A68; }
         </style>
         </head>
         <body>
         <img class="photo" src="/photo/{{photo}}.jpg" alt="">
         <main>
-        <span class="site">
-        <svg aria-hidden="true" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"></circle>
-          <path d="M2 8h12M8 2c2 2.2 2 9.8 0 12M8 2c-2 2.2-2 9.8 0 12"></path></svg>
-        {{site}}
-        </span>
         <h1>{{line}}</h1>
         <p id="time"></p>
         <div class="actions">{{actions}}</div>
@@ -125,12 +118,17 @@ struct MistPage {
 
         function showTime() {
           if (!endsAt) return;
-          const until = new Date(endsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          const until = {{until}};
           const minutes = Math.max(1, Math.ceil((endsAt - Date.now()) / 60000));
           const left = minutes >= 60 ? Math.floor(minutes / 60) + "h " + (minutes % 60) + "m" : minutes + "m";
           document.getElementById("time").textContent = isSummit
             ? "You're in Summit Mode until " + until + ". The summit is " + left + " away."
             : "You're on the Trail until " + until + ", " + left + " to go.";
+        }
+
+        // The tracker opens Tapa, so the browser doesn't ask first.
+        function openTapa() {
+          fetch("/open?token=" + encodeURIComponent({{token}}), { method: "POST" });
         }
 
         // Back past the blocked page to where the tab was before it.
