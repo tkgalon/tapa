@@ -10,9 +10,9 @@ struct ModePicker: View {
     @Namespace private var selection
 
     var body: some View {
-        HStack(spacing: 0) {
-            segment(.summit, title: "🏔️ Summit Mode")
+        EqualWidthHStack {
             segment(.trail, title: "🥾 Trail")
+            segment(.summit, title: "🏔️ Summit Mode")
         }
         .padding(2)
         .background(.quaternary, in: .capsule)
@@ -31,7 +31,7 @@ struct ModePicker: View {
                 .fontWeight(isSelected ? .medium : .regular)
                 .foregroundStyle(isSelected ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
                 .padding(.horizontal, 16)
-                .frame(minHeight: 28)
+                .frame(maxWidth: .infinity, minHeight: 28)
                 .background {
                     if isSelected {
                         Capsule()
