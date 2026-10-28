@@ -18,7 +18,7 @@ struct OathTerms<When: View>: View {
             }
         }
         .padding(.horizontal, 12)
-        .background(.background, in: .rect(cornerRadius: 12))
+        .background(.background.opacity(0.7), in: .rect(cornerRadius: 12))
         .overlay {
             RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(.separator)
