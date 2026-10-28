@@ -6,11 +6,9 @@ struct AscentView: View {
     let snapshot: SessionSnapshot
 
     @Environment(DaemonStore.self) private var daemon
+    @Environment(AppRouter.self) private var router
 
     @State private var scale: CGFloat = 1
-    @State private var isShowingDescent = false
-    @State private var failure: String?
-    @State private var isShowingFailure = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -29,7 +27,7 @@ struct AscentView: View {
                 AscentModeChip(
                     mode: snapshot.mode ?? .trail,
                     isRestStop: snapshot.state == .restStop,
-                    ritualName: ritualName
+                    ritualName: daemon.runningRitualName
                 )
 
                 if let target = countdownTarget {
@@ -69,44 +67,50 @@ struct AscentView: View {
                 .padding(.trailing, 16)
                 .ignoresSafeArea(edges: .top)
         }
-        .sheet(isPresented: $isShowingDescent) {
-            DescentSheet(descentsRemaining: snapshot.descentsRemaining, summitEndsAt: snapshot.endsAt)
-        }
-        .alert("Couldn't Change the Ascent", isPresented: $isShowingFailure, presenting: failure) { _ in
-            Button("OK") {}
-        } message: { failure in
-            Text(failure)
-        }
     }
 
     /// Top right, where the critical action sits on every Mac window, as Basecamp's badge does.
     private var actions: some View {
-        HStack(spacing: 8) {
-            if snapshot.mode == .summit {
-                Button {
-                    isShowingDescent = true
-                } label: {
-                    Text("Descent… \(Text("\(snapshot.descentsRemaining) left").foregroundStyle(.secondary))")
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            HStack(spacing: 8) {
+                if snapshot.mode == .summit {
+                    Button {
+                        router.showDescent()
+                    } label: {
+                        Text("Descent… \(Text("\(snapshot.descentsRemaining) left").foregroundStyle(.secondary))")
+                    }
+                    .help("End Summit Mode early")
+                } else {
+                    restStopActions(at: context.date)
+                    Button("End Trail", action: endTrail)
                 }
-                .help("End Summit Mode early")
-            } else {
-                if snapshot.state != .restStop {
-                    Button("☕️ Take a Rest Stop", action: takeRestStop)
-                }
-                Button("End Trail", action: endTrail)
+                SettingsButton()
             }
+            .buttonStyle(.glassIfAvailable)
         }
-        .buttonStyle(.glassIfAvailable)
     }
 
-    /// The Ritual that started the Ascent, when one did.
-    private var ritualName: String? {
-        for session in snapshot.activeSessions {
-            if case .ritual(let id) = session.source {
-                return daemon.config.rituals.first { $0.id == id }?.name
+    @ViewBuilder
+    private func restStopActions(at now: Date) -> some View {
+        switch snapshot.restStopPhase(at: now) {
+        case .closed:
+            Button("☕️ Take a Rest Stop") {
+                perform { try await daemon.requestRestStop() }
             }
+        case .waiting(let readyAt):
+            Button("☕️ Available in \(secondsLeft(until: readyAt, from: now))s") {}
+                .disabled(true)
+        case .ready:
+            // Styled as a button so it matches End Trail beside it.
+            RestStopMenu { length in
+                perform { try await daemon.startRestStop(length: length) }
+            }
+            .menuStyle(.button)
+            .menuIndicator(.hidden)
+            .fixedSize()
+        case .open:
+            Button("End Rest Stop", action: endRestStop)
         }
-        return nil
     }
 
     /// During a Rest Stop the countdown is to the end of the stop, otherwise to the end of the Ascent.
@@ -128,9 +132,8 @@ struct AscentView: View {
     }
 
     private var leaveBehindSummary: Text {
-        let ids = Set(snapshot.activeSessions.flatMap(\.leaveBehindIDs))
-        let lists = daemon.config.leaveBehindLists.filter { ids.contains($0.id) }
-        let websites = daemon.config.websiteCount(in: ids)
+        let lists = daemon.activeLists
+        let websites = daemon.config.websiteCount(in: Set(lists.map(\.id)))
         let names = lists.map(\.name).formatted(.list(type: .and))
         return Text("\(names) · ^[\(websites) website](inflect: true)")
     }
@@ -139,7 +142,7 @@ struct AscentView: View {
         switch (snapshot.state, snapshot.mode) {
         case (.restStop, _): "Taking one now"
         case (_, .summit): "Off in Summit Mode"
-        default: "5 minutes, when you need one"
+        default: "After a wait of \(Duration.seconds(snapshot.restStopWait).formatted(.units(width: .wide)))"
         }
     }
 
@@ -153,17 +156,16 @@ struct AscentView: View {
         return left.formatted(.units(allowed: [.hours, .minutes], width: .narrow, fractionalPart: .hide(rounded: .up)))
     }
 
-    private func takeRestStop() {
-        perform { try await daemon.requestRestStop() }
+    private func endRestStop() {
+        perform { try await daemon.endRestStop() }
+    }
+
+    private func secondsLeft(until date: Date, from now: Date) -> Int {
+        max(Int(date.timeIntervalSince(now).rounded(.up)), 0)
     }
 
     private func endTrail() {
-        let trails = snapshot.activeSessions.filter { $0.mode == .trail }
-        perform {
-            for session in trails {
-                try await daemon.endTrail(sessionID: session.id)
-            }
-        }
+        perform { try await daemon.endTrails() }
     }
 
     private func perform(_ change: @escaping () async throws -> Void) {
@@ -171,8 +173,7 @@ struct AscentView: View {
             do {
                 try await change()
             } catch {
-                failure = errorMessage(for: error)
-                isShowingFailure = true
+                router.report(error)
             }
         }
     }
