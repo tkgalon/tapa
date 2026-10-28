@@ -15,6 +15,7 @@ struct LeaveBehindView: View {
     @State private var deleting: LeaveBehindList?
     @State private var isConfirmingDelete = false
     @State private var failure: String?
+    @State private var failureTitle = ""
     @State private var isShowingFailure = false
 
     var body: some View {
@@ -98,7 +99,7 @@ struct LeaveBehindView: View {
         } message: { list in
             Text(deletionMessage(for: list))
         }
-        .alert("Couldn't Save Leave Behind", isPresented: $isShowingFailure, presenting: failure) { _ in
+        .alert(failureTitle, isPresented: $isShowingFailure, presenting: failure) { _ in
             Button("OK") {}
         } message: { failure in
             Text(failure)
@@ -162,6 +163,7 @@ struct LeaveBehindView: View {
     private func requestDeletion(of list: LeaveBehindList) {
         let stranded = config.ritualsOnlyUsing(list.id).map(\.name)
         guard stranded.isEmpty else {
+            failureTitle = String(localized: "Couldn't Delete \(list.name)")
             failure = String(localized: """
                 \(list.name) is the only list for \(stranded.formatted(.list(type: .and))). Pick another \
                 list in Rituals first.
@@ -194,7 +196,7 @@ struct LeaveBehindView: View {
         var updated = config
         updated.deleteList(list.id)
         filter = .all
-        apply(updated)
+        apply(updated, failureTitle: String(localized: "Couldn't Delete \(list.name)"))
     }
 
     private func removalTitle(for removal: PendingRemoval) -> String {
@@ -246,11 +248,15 @@ struct LeaveBehindView: View {
         filter = .list(list.id)
     }
 
-    private func apply(_ updated: DaemonConfig) {
+    private func apply(
+        _ updated: DaemonConfig,
+        failureTitle: String = String(localized: "Couldn't Save Leave Behind")
+    ) {
         Task {
             do {
                 try await daemon.updateConfig(updated)
             } catch {
+                self.failureTitle = failureTitle
                 failure = errorMessage(for: error)
                 isShowingFailure = true
             }
