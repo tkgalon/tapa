@@ -54,6 +54,14 @@ final class DaemonStore {
         snapshot = try await connectedClient().endTrail(sessionID: sessionID)
     }
 
+    func useDescent(reason: String) async throws {
+        snapshot = try await connectedClient().useDescent(reason: reason, scope: .summit)
+    }
+
+    func requestRestStop() async throws {
+        snapshot = try await connectedClient().requestRestStop()
+    }
+
     func updateConfig(_ newConfig: DaemonConfig) async throws {
         snapshot = try await connectedClient().updateConfig(newConfig)
         config = newConfig
