@@ -6,6 +6,10 @@ struct TapaApp: App {
     @State private var favicons = FaviconStore()
     @State private var router = AppRouter()
 
+    init() {
+        TrackerAgent.register()
+    }
+
     var body: some Scene {
         Window("Tapa", id: "main") {
             ContentView()

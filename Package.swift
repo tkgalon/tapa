@@ -15,6 +15,7 @@ let package = Package(
         .executableTarget(name: "TapaDaemon", dependencies: ["TapaDaemonKit"]),
         .executableTarget(name: "tapactl", dependencies: ["TapaCore", "TapaIPC"]),
         .executableTarget(name: "TapaApp", dependencies: ["TapaCore", "TapaIPC"]),
+        .executableTarget(name: "TapaTracker", dependencies: ["TapaCore", "TapaIPC"]),
         .testTarget(name: "TapaCoreTests", dependencies: ["TapaCore"]),
         .testTarget(name: "TapaDaemonKitTests", dependencies: ["TapaDaemonKit", "TapaIPC"]),
     ]
