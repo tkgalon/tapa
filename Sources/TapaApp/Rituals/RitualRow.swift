@@ -10,6 +10,8 @@ struct RitualRow: View {
     let isRunning: Bool
     /// Running Summit Mode holds the Ritual until it ends.
     let isLocked: Bool
+    /// Set when today's run already ended: when the Ritual starts again, like "Tomorrow at 09.00".
+    let startsAgain: String?
     let edit: () -> Void
     let setEnabled: (Bool) -> Void
 
@@ -44,6 +46,12 @@ struct RitualRow: View {
                     .font(.callout)
                     .foregroundStyle(Color.glacier)
                     .help(isLocked ? "Summit Mode Rituals can't change until they end." : "")
+            } else if let startsAgain {
+                Text("Ended for today")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .help("Starts again \(startsAgain)")
+                    .accessibilityLabel("Ended for today. Starts again \(startsAgain).")
             }
 
             Toggle(ritual.name, isOn: Binding(get: { ritual.enabled }, set: { setEnabled($0) }))

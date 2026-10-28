@@ -8,7 +8,7 @@ struct UpNextView: View {
     var body: some View {
         VStack(spacing: 4) {
             if let upcoming {
-                Text("⛺️ Basecamp · Up Next at \(upcoming.interval.start, format: .dateTime.hour().minute())")
+                Text("⛺️ Basecamp · Up Next \(upcoming.interval.start.ritualStart(from: now))")
                     .font(.system(size: 13 * scale, weight: .semibold))
                 Text(upcoming.ritual.name)
                     .font(.system(size: 40 * scale, weight: .semibold, design: .serif))

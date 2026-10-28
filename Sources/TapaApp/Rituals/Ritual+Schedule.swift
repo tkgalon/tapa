@@ -16,6 +16,28 @@ extension Ritual {
     func isRunning(in snapshot: SessionSnapshot?) -> Bool {
         snapshot?.activeSessions.contains { $0.source == .ritual(id: id) } ?? false
     }
+
+    /// Whether today's run already ended, by End Trail or a Descent. The daemon starts a due Ritual
+    /// at once and never twice in one occurrence, so a due Ritual that isn't running has ended.
+    func hasEnded(in snapshot: SessionSnapshot?, at date: Date, calendar: Calendar = .current) -> Bool {
+        guard enabled, snapshot != nil, occurrence(containing: date, calendar: calendar) != nil else { return false }
+        return !isRunning(in: snapshot)
+    }
+}
+
+extension Date {
+    /// "at 09.00" today, "Tomorrow at 09.00", or "Monday at 09.00" later in the week.
+    func ritualStart(from now: Date, calendar: Calendar = .current) -> String {
+        let time = formatted(.dateTime.hour().minute())
+        if calendar.isDate(self, inSameDayAs: now) {
+            return String(localized: "at \(time)")
+        }
+        if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now),
+           calendar.isDate(self, inSameDayAs: tomorrow) {
+            return String(localized: "Tomorrow at \(time)")
+        }
+        return String(localized: "\(formatted(.dateTime.weekday(.wide))) at \(time)")
+    }
 }
 
 extension TimeOfDay {
