@@ -106,7 +106,7 @@ Uninstalling stops the daemon, removes Tapa's block from `/etc/hosts`, and delet
 
 Tapa is split so that nothing you can quit holds the block. A root daemon owns every rule, and the app only asks it for changes.
 
-<p align="center"><img src="docs/images/architecture.webp" alt="Tapa architecture" width="760"></p>
+<p align="center"><img src="docs/images/architecture.svg" alt="Tapa architecture" width="760"></p>
 
 | Part | Runs as | What it does |
 | --- | --- | --- |

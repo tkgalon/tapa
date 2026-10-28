@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 504" role="img" aria-label="A root daemon holds the state without opening a network port" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13">
+  <style>
+    .bg { fill: #ffffff; }
+    .ink { fill: #1d2430; }
+    .quiet { fill: #5b6573; }
+    .zone { fill: #f3f6f9; stroke: #c9d0d8; }
+    .box { fill: none; stroke: #8a94a3; stroke-width: 1.25; }
+    .main { fill: #3b82c4; fill-opacity: 0.12; stroke: #3b82c4; stroke-width: 2; }
+    .edge { fill: none; stroke: #8a94a3; stroke-width: 1.25; }
+    .head { fill: #8a94a3; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; }
+      .ink { fill: #e6edf3; }
+      .quiet { fill: #9aa5b1; }
+      .zone { fill: #161b22; stroke: #30363d; }
+      .box, .edge { stroke: #6e7681; }
+      .main { fill: #6aaee8; stroke: #6aaee8; }
+      .head { fill: #6e7681; }
+    }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path class="head" d="M0 0L10 5L0 10z"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="760" height="504" rx="12"/>
+
+  <text class="ink" x="24" y="34" font-size="15" font-weight="600">A root daemon holds the state, without opening a network port</text>
+
+  <rect class="zone" x="16" y="52" width="712" height="144" rx="8"/>
+  <text class="quiet" x="32" y="74" font-size="12" font-weight="600">Your account, no root</text>
+  <rect class="zone" x="16" y="256" width="712" height="168" rx="8"/>
+  <text class="quiet" x="32" y="278" font-size="12" font-weight="600">System, root (LaunchDaemon)</text>
+
+  <g class="edge">
+    <path d="M132 180V224H330V296" marker-end="url(#arrow)"/>
+    <path d="M372 180V296" marker-end="url(#arrow)"/>
+    <path d="M472 124H512" marker-end="url(#arrow)"/>
+    <path d="M512 156H472" marker-end="url(#arrow)"/>
+    <path d="M272 352H232" marker-end="url(#arrow)"/>
+    <path d="M472 352H512" marker-end="url(#arrow)"/>
+  </g>
+  <text class="quiet" x="140" y="214" font-size="11.5">XPC, signed with a local certificate</text>
+  <text class="quiet" x="380" y="250" font-size="11.5">XPC</text>
+  <text class="quiet" x="492" y="88" text-anchor="middle" font-size="11.5">Apple Events, Mist over HTTP</text>
+
+  <rect class="box" x="32" y="92" width="200" height="88" rx="8"/>
+  <text class="ink" x="44" y="116" font-weight="600">Tapa.app</text>
+  <text class="quiet" x="44" y="136" font-size="11.5">SwiftUI window and menu bar</text>
+  <text class="quiet" x="44" y="152" font-size="11.5">reads usage.sqlite</text>
+  <text class="quiet" x="44" y="168" font-size="11.5">holds no session state</text>
+
+  <rect class="box" x="272" y="92" width="200" height="88" rx="8"/>
+  <text class="ink" x="284" y="116" font-weight="600">TapaTracker (agent)</text>
+  <text class="quiet" x="284" y="136" font-size="11.5">watches the active app and tab</text>
+  <text class="quiet" x="284" y="152" font-size="11.5">Mist server on 127.0.0.1</text>
+  <text class="quiet" x="284" y="168" font-size="11.5">writes usage.sqlite</text>
+
+  <rect class="box" x="512" y="92" width="200" height="88" rx="8"/>
+  <text class="ink" x="524" y="116" font-weight="600">Browsers</text>
+  <text class="quiet" x="524" y="136" font-size="11.5">Safari, Chrome, Arc,</text>
+  <text class="quiet" x="524" y="152" font-size="11.5">Brave, Edge, Opera</text>
+  <text class="quiet" x="524" y="168" font-size="11.5">Firefox: network layer only</text>
+
+  <rect class="box" x="32" y="312" width="200" height="80" rx="8"/>
+  <text class="ink" x="44" y="336" font-weight="600">Root storage</text>
+  <text class="quiet" x="44" y="356" font-size="11.5">state.json (sessions, config)</text>
+  <text class="quiet" x="44" y="372" font-size="11.5">atomic, schemaVersion</text>
+
+  <rect class="main" x="272" y="296" width="200" height="112" rx="8"/>
+  <text class="ink" x="284" y="320" font-weight="600">TapaDaemon (root)</text>
+  <text class="ink" x="284" y="340" font-size="11.5">SessionEngine (actor)</text>
+  <text class="ink" x="284" y="356" font-size="11.5">Policy: rules and Descents</text>
+  <text class="ink" x="284" y="372" font-size="11.5">Enforcer: hosts file</text>
+  <text class="ink" x="284" y="388" font-size="11.5">no network port</text>
+
+  <rect class="box" x="512" y="312" width="200" height="80" rx="8"/>
+  <text class="ink" x="524" y="336" font-weight="600">System network</text>
+  <text class="quiet" x="524" y="356" font-size="11.5">/etc/hosts, checked every 5 s</text>
+  <text class="quiet" x="524" y="372" font-size="11.5">applies to every app</text>
+
+  <rect x="16" y="440" width="712" height="40" rx="8" fill="none" class="box" stroke-dasharray="4 4"/>
+  <text class="ink" x="372" y="465" text-anchor="middle">TapaCore and TapaIPC are shared by all three. TapaUsage by the app and tracker.</text>
+</svg>
