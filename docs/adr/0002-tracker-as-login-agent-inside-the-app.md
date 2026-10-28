@@ -1,6 +1,6 @@
 # 2. Run the tracker as a login agent inside Tapa.app
 
-- Status: accepted
+- Status: superseded by [ADR 0003](0003-tracker-as-a-classic-launch-agent.md)
 - Date: 2026-10-28
 
 ## Context
@@ -35,8 +35,8 @@ A spike on branch `feat/m4-mist` built the tracker with a fixed blocked domain a
 
 - The user grants Automation once per browser, under the name they know. `NSAppleEventsUsageDescription` lives in the app's Info.plist.
 - Re-signing with the same certificate keeps the permission, since the designated requirement doesn't change. Creating a new certificate, as in ADR 0001, would ask again.
-- `tell application` launches a browser that isn't running, so the tracker checks that the browser is open before sending it Apple events.
-- Replacing the app bundle doesn't restart a running tracker. Development builds restart it with `launchctl kickstart -k gui/<uid>/id.tapa.tracker`.
+- `tell application` launches a browser that isn't running, so the tracker only sends Apple events to the browser in front.
+- launchd keeps a reference to the bundle it started the tracker from. Once the bundle is deleted and rebuilt, launchd can't start the tracker again (exit 78, `EX_CONFIG`). Builds unload it with `launchctl bootout gui/<uid>/id.tapa.tracker` once the new bundle is in place, then open the app, which registers it again. Unloading before the bundle is replaced isn't enough.
 - The tracker's footprint sits at the PRD's 25 MB limit while it links AppKit. Linking less, or reading running apps another way, is the first thing to try if it grows.
 - A website can request `127.0.0.1:47800` like any address. Mist only shows a page and never changes a session, so this exposes nothing. Actions go through `tapa://`, which only opens a confirmation in the app.
 - Not covered yet: Safari, Arc, Brave, Edge and Opera, and pausing while the screen is locked.

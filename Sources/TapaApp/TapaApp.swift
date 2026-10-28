@@ -7,7 +7,7 @@ struct TapaApp: App {
     @State private var router = AppRouter()
 
     init() {
-        TrackerAgent.register()
+        Task { await TrackerAgent.install() }
     }
 
     var body: some Scene {

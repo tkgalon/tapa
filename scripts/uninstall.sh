@@ -32,5 +32,7 @@ rm -f "/Library/LaunchDaemons/$label.plist" "$daemon_path" /usr/local/bin/tapact
 rm -rf "/Library/Application Support/Tapa" /Library/Logs/Tapa
 ROOT
 
+launchctl bootout "gui/$(id -u)/id.tapa.tracker" 2>/dev/null || true
+rm -f "$HOME/Library/LaunchAgents/id.tapa.tracker.plist"
 security delete-identity -c "$cert_name" >/dev/null 2>&1 || true
 echo "Uninstalled."
