@@ -41,7 +41,6 @@ struct AscentView: View {
             controls
                 .padding(.bottom, 32 * scale)
         }
-        .photoToolbar()
         .alert("Couldn't End the Trail", isPresented: $isShowingFailure, presenting: failure) { _ in
             Button("OK") {}
         } message: { failure in
