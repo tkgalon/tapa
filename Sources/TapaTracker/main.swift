@@ -9,6 +9,8 @@ let logger = Logger(subsystem: "id.tapa", category: "tracker")
 logger.notice("Tracker started")
 
 MainActor.assumeIsolated {
+    // A background helper: no Dock icon and no menu bar, though it lives inside Tapa.app.
+    NSApplication.shared.setActivationPolicy(.prohibited)
     let blocks = BlockWatcher()
     let tabs = TabReader()
     let rest = ScreenRest()
