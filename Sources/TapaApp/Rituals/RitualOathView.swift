@@ -12,8 +12,8 @@ struct RitualOathView: View {
     var body: some View {
         OathView(
             message: """
-                \(ritual.name) begins Summit Mode on its own. Every time it runs, your focus rules stay \
-                active until it ends.
+                Hear my words and bear witness. Each time \(ritual.name) begins, I leave these \
+                distractions at the foot of the mountain, and I shall not seek them until it ends.
                 """,
             footnote: "Changing it later asks for the Oath again, and it can't change while it runs.",
             websiteCount: daemon.config.websiteCount(in: ritual.leaveBehindIDs),

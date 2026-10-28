@@ -14,8 +14,8 @@ struct OathSheet: View {
     var body: some View {
         OathView(
             message: """
-                You're about to begin a committed ascent. Once started, your focus rules stay active \
-                until the scheduled end time.
+                Hear my words and bear witness. I leave these distractions at the foot of the \
+                mountain, and I shall not seek them until my watch is ended.
                 """,
             footnote: "Your commitment can't be changed during the ascent.",
             websiteCount: daemon.config.websiteCount(in: request.leaveBehindIDs)
