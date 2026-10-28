@@ -29,4 +29,5 @@ codesign --force -s "$cert_name" -i id.tapa.app "$app"
 pkill -x Tapa 2>/dev/null || true
 sleep 1
 
-open "$app"
+# -n: after a forced quit, Launch Services can still think the old copy is running.
+open -n "$app"
