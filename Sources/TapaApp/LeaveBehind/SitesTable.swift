@@ -7,13 +7,15 @@ struct SitesTable: View {
     let canRemove: Bool
     let remove: (SiteEntry) -> Void
 
+    @Environment(FaviconStore.self) private var favicons
     @State private var sortOrder = [KeyPathComparator(\SiteEntry.name)]
 
     var body: some View {
+        let favicons = favicons
         Table(entries.sorted(using: sortOrder), sortOrder: $sortOrder) {
             TableColumn("Website", value: \.name) { entry in
                 HStack(spacing: 10) {
-                    SiteIcon(domain: entry.domain)
+                    SiteIcon(domain: entry.domain, favicons: favicons)
                     Text(entry.name)
                 }
             }

@@ -4,8 +4,9 @@ import TapaCore
 /// The site's icon, or its first letter until the icon can be fetched.
 struct SiteIcon: View {
     let domain: DomainName
-
-    @Environment(FaviconStore.self) private var favicons
+    /// Passed in rather than read from the environment: a Table row being torn down while the
+    /// rows change can lose the environment and crash on the lookup.
+    let favicons: FaviconStore
 
     var body: some View {
         Group {
