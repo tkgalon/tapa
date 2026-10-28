@@ -100,11 +100,25 @@ public actor SessionEngine {
     }
 
     @discardableResult
-    public func requestRestStop(
+    public func requestRestStop() throws(TapaError) -> SessionSnapshot {
+        let now = advance()
+        _ = try state.ascent.requestRestStop(now: now)
+        return commit(now: now)
+    }
+
+    @discardableResult
+    public func startRestStop(
         length: TimeInterval = AscentStateMachine.defaultRestStopLength
     ) throws(TapaError) -> SessionSnapshot {
         let now = advance()
-        _ = try state.ascent.requestRestStop(length: length, now: now)
+        _ = try state.ascent.startRestStop(length: length, now: now)
+        return commit(now: now)
+    }
+
+    @discardableResult
+    public func endRestStop() throws(TapaError) -> SessionSnapshot {
+        let now = advance()
+        try state.ascent.endRestStop(now: now)
         return commit(now: now)
     }
 
@@ -220,7 +234,9 @@ public actor SessionEngine {
             endsAt: policy.endsAt,
             descentsRemaining: ledger.remaining,
             isClockVerified: state.clock.isVerified,
-            recoveredFromUnreadableState: recoveredFromUnreadableState
+            recoveredFromUnreadableState: recoveredFromUnreadableState,
+            nextRestStopWait: state.ascent.nextRestStopWait,
+            restStopReadyAt: state.ascent.restStopReadyAt
         )
     }
 }

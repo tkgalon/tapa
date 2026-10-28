@@ -6,8 +6,12 @@ public enum DaemonRequest: Codable, Hashable, Sendable {
     case config
     case start(StartRequest)
     case endTrail(sessionID: UUID)
-    /// `nil` uses the default length.
-    case requestRestStop(length: TimeInterval?)
+    /// Starts the wait before a Rest Stop can be taken.
+    case requestRestStop
+    /// Takes the Rest Stop once its wait is over. `nil` uses the default length.
+    case startRestStop(length: TimeInterval?)
+    /// Cancels a Rest Stop still waiting or ready, or closes an open one.
+    case endRestStop
     case useDescent(reason: String, scope: DescentScope)
     case updateConfig(DaemonConfig)
 }

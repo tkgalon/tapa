@@ -82,18 +82,111 @@ struct EndTests {
 struct RestStopTests {
     let now = date(26, 10)
 
-    @Test func opensForFiveMinutesWithoutMovingTheEnd() throws {
+    /// Asks for a Rest Stop at `at` and takes it once the wait is over.
+    @discardableResult
+    func takeRestStop(
+        _ ascent: inout AscentStateMachine,
+        length: TimeInterval = minutes(5),
+        at: Date
+    ) throws -> RestStop {
+        let readyAt = try ascent.requestRestStop(now: at)
+        return try ascent.startRestStop(length: length, now: readyAt)
+    }
+
+    @Test func opensAfterItsWaitWithoutMovingTheEnd() throws {
         var ascent = machine(at: now)
         let session = try ascent.start(trail(until: date(26, 12)), now: now)
 
-        let stop = try ascent.requestRestStop(now: date(26, 11))
-        #expect(stop.endAt == date(26, 11, 5))
-        #expect(ascent.state(at: date(26, 11, 3)) == .restStop)
-        #expect(ascent.state(at: date(26, 11, 5)) == .ascent)
-        #expect(ascent.activeSessions(at: date(26, 11)).first?.endAt == session.endAt)
+        let readyAt = try ascent.requestRestStop(now: date(26, 11))
+        #expect(readyAt == date(26, 11).addingTimeInterval(30))
+        #expect(ascent.state(at: readyAt) == .ascent)
+        #expect(throws: TapaError.restStopNotReady) {
+            try ascent.startRestStop(length: minutes(5), now: readyAt.addingTimeInterval(-1))
+        }
 
-        ascent.tick(now: date(26, 11, 5))
+        let stop = try ascent.startRestStop(length: minutes(5), now: readyAt)
+        #expect(stop.endAt == readyAt.addingTimeInterval(minutes(5)))
+        #expect(ascent.state(at: readyAt) == .restStop)
+        #expect(ascent.state(at: stop.endAt) == .ascent)
+        #expect(ascent.activeSessions(at: readyAt).first?.endAt == session.endAt)
+
+        ascent.tick(now: stop.endAt)
         #expect(ascent.restStop == nil)
+    }
+
+    @Test func eachWaitIsLongerUpToNinetySeconds() throws {
+        var ascent = machine(at: now)
+        _ = try ascent.start(trail(until: date(26, 12)), now: now)
+
+        var waits: [TimeInterval] = []
+        var at = now
+        for _ in 0..<4 {
+            waits.append(ascent.nextRestStopWait)
+            at = try takeRestStop(&ascent, length: minutes(1), at: at).endAt
+        }
+        #expect(waits == [30, 60, 90, 90])
+    }
+
+    @Test func aNewAscentStartsAtTheShortestWait() throws {
+        var ascent = machine(at: now)
+        let session = try ascent.start(trail(until: date(26, 11)), now: now)
+        try takeRestStop(&ascent, at: now)
+        #expect(ascent.nextRestStopWait == 60)
+
+        _ = try ascent.endTrail(sessionID: session.id, now: date(26, 10, 10))
+        _ = try ascent.start(trail(until: date(26, 12)), now: date(26, 10, 10))
+        #expect(ascent.nextRestStopWait == 30)
+    }
+
+    @Test func aReadyRestStopLapsesSoTheWaitCantBeBanked() throws {
+        var ascent = machine(at: now)
+        _ = try ascent.start(trail(until: date(26, 12)), now: now)
+        let readyAt = try ascent.requestRestStop(now: now)
+        let lapsed = readyAt.addingTimeInterval(AscentStateMachine.restStopReadyWindow)
+
+        #expect(throws: TapaError.restStopNotReady) { try ascent.startRestStop(length: minutes(5), now: lapsed) }
+        ascent.tick(now: lapsed)
+        #expect(ascent.restStopReadyAt == nil)
+        #expect(ascent.nextRestStopWait == 30)
+    }
+
+    @Test func askingAgainWhileWaitingKeepsTheSameTime() throws {
+        var ascent = machine(at: now)
+        _ = try ascent.start(trail(until: date(26, 12)), now: now)
+        let readyAt = try ascent.requestRestStop(now: now)
+        #expect(try ascent.requestRestStop(now: now.addingTimeInterval(10)) == readyAt)
+    }
+
+    @Test func cancelsWhileWaitingAndEndsEarlyOnceOpen() throws {
+        var ascent = machine(at: now)
+        _ = try ascent.start(trail(until: date(26, 12)), now: now)
+        _ = try ascent.requestRestStop(now: now)
+        try ascent.endRestStop(now: now.addingTimeInterval(10))
+        #expect(ascent.restStopReadyAt == nil)
+        #expect(ascent.nextRestStopWait == 30)
+
+        let stop = try takeRestStop(&ascent, at: date(26, 10, 1))
+        try ascent.endRestStop(now: stop.startAt.addingTimeInterval(60))
+        #expect(ascent.state(at: stop.startAt.addingTimeInterval(60)) == .ascent)
+        #expect(ascent.nextRestStopWait == 60)
+        #expect(throws: TapaError.notInRestStop) { try ascent.endRestStop(now: date(26, 10, 3)) }
+    }
+
+    @Test func stateSavedBeforeWaitsExistedStillLoads() throws {
+        var ascent = machine(at: now)
+        _ = try ascent.start(trail(until: date(26, 12)), now: now)
+        var saved = try #require(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(ascent)) as? [String: Any]
+        )
+        saved.removeValue(forKey: "restStopsTaken")
+        saved.removeValue(forKey: "restStopReadyAt")
+
+        let loaded = try JSONDecoder().decode(
+            AscentStateMachine.self,
+            from: JSONSerialization.data(withJSONObject: saved)
+        )
+        #expect(loaded.activeSessions(at: now).count == 1)
+        #expect(loaded.nextRestStopWait == 30)
     }
 
     @Test func refusedUnlessEverySessionIsTrail() throws {
@@ -110,17 +203,18 @@ struct RestStopTests {
     @Test func refusesOverlapsAndBadLengths() throws {
         var ascent = machine(at: now)
         _ = try ascent.start(trail(until: date(26, 12)), now: now)
-        #expect(throws: TapaError.invalidDuration) { try ascent.requestRestStop(length: 0, now: now) }
-        _ = try ascent.requestRestStop(now: now)
-        #expect(throws: TapaError.alreadyInRestStop) { try ascent.requestRestStop(now: date(26, 10, 2)) }
+        let readyAt = try ascent.requestRestStop(now: now)
+        #expect(throws: TapaError.invalidDuration) { try ascent.startRestStop(length: 0, now: readyAt) }
+        _ = try ascent.startRestStop(length: minutes(5), now: readyAt)
+        #expect(throws: TapaError.alreadyInRestStop) { try ascent.requestRestStop(now: readyAt.addingTimeInterval(60)) }
     }
 
     @Test func summitStartingMidRestStopClosesIt() throws {
         var ascent = machine(at: now)
         _ = try ascent.start(trail(until: date(26, 12)), now: now)
-        _ = try ascent.requestRestStop(now: now)
-        _ = try ascent.start(summit(until: date(26, 11)), now: date(26, 10, 1))
-        #expect(ascent.state(at: date(26, 10, 2)) == .ascent)
+        let stop = try takeRestStop(&ascent, at: now)
+        _ = try ascent.start(summit(until: date(26, 11)), now: stop.startAt)
+        #expect(ascent.state(at: stop.startAt.addingTimeInterval(60)) == .ascent)
     }
 }
 

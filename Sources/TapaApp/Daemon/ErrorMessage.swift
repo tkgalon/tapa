@@ -23,6 +23,8 @@ private func message(for error: TapaError) -> String {
     case .summitLocked: String(localized: "Summit Mode can end early only with a Descent.")
     case .notInAscent: String(localized: "No Ascent is running.")
     case .alreadyInRestStop: String(localized: "A Rest Stop is already running.")
+    case .notInRestStop: String(localized: "The Rest Stop has already ended.")
+    case .restStopNotReady: String(localized: "The Rest Stop isn't ready yet. Ask for one and wait.")
     case .sessionNotFound: String(localized: "That Ascent has already ended.")
     case .reasonRequired: String(localized: "Write what needs you right now.")
     case .noDescentLeft: String(localized: "No Descents are left this week.")

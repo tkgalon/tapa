@@ -61,8 +61,18 @@ public final class DaemonClient: @unchecked Sendable {
     }
 
     @discardableResult
-    public func requestRestStop(length: TimeInterval? = nil) async throws -> SessionSnapshot {
-        try snapshot(from: await send(.requestRestStop(length: length)))
+    public func requestRestStop() async throws -> SessionSnapshot {
+        try snapshot(from: await send(.requestRestStop))
+    }
+
+    @discardableResult
+    public func startRestStop(length: TimeInterval? = nil) async throws -> SessionSnapshot {
+        try snapshot(from: await send(.startRestStop(length: length)))
+    }
+
+    @discardableResult
+    public func endRestStop() async throws -> SessionSnapshot {
+        try snapshot(from: await send(.endRestStop))
     }
 
     @discardableResult
