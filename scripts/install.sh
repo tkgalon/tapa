@@ -1,5 +1,6 @@
 #!/bin/sh
-# Builds Tapa, signs it with a local certificate and installs the daemon and tapactl.
+# Builds Tapa, signs it with a local certificate, installs the daemon and tapactl, and puts
+# Tapa.app in /Applications.
 # Run as yourself. You'll be asked for your password once, for the steps that need root.
 set -eu
 cd "$(dirname "$0")/.."
@@ -104,6 +105,14 @@ chown root:wheel "$plist_path"
 chmod 644 "$plist_path"
 launchctl bootstrap system "$plist_path"
 ROOT
+
+# Owned by the user, like any app copied into /Applications. Opening it points the tracker here.
+echo "Installing Tapa.app..."
+pkill -x Tapa 2>/dev/null || true
+scripts/build-app.sh release "$stage/Tapa.app"
+rm -rf /Applications/Tapa.app
+ditto "$stage/Tapa.app" /Applications/Tapa.app
+open /Applications/Tapa.app
 
 sleep 1
 echo "Installed."
