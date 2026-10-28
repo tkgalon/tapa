@@ -92,10 +92,29 @@ struct SessionEngineTests {
         try await engine.start(StartRequest(mode: .trail, endAt: date(26, 12), leaveBehindIDs: [social.id]))
 
         try await engine.requestRestStop()
+        #expect(enforcer.blocked == socialDomains)
+        await #expect(throws: TapaError.restStopNotReady) { try await engine.startRestStop() }
+
+        pass(30)
+        try await engine.startRestStop()
         #expect(enforcer.blocked.isEmpty)
 
         pass(5 * 60)
         await engine.reconcile()
+        #expect(enforcer.blocked == socialDomains)
+    }
+
+    @Test func endingARestStopBlocksAgainAtOnce() async throws {
+        let engine = try await configuredEngine()
+        try await engine.start(StartRequest(mode: .trail, endAt: date(26, 12), leaveBehindIDs: [social.id]))
+        try await engine.requestRestStop()
+        pass(30)
+        try await engine.startRestStop()
+        #expect(enforcer.blocked.isEmpty)
+
+        let snapshot = try await engine.endRestStop()
+        #expect(snapshot.state == .ascent)
+        #expect(snapshot.nextRestStopWait == 60)
         #expect(enforcer.blocked == socialDomains)
     }
 

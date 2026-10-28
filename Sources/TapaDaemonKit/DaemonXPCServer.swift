@@ -76,9 +76,13 @@ public final class DaemonXPCServer: NSObject, NSXPCListenerDelegate, @unchecked 
                     return .snapshot(try await engine.start(start))
                 case .endTrail(let sessionID):
                     return .snapshot(try await engine.endTrail(sessionID: sessionID))
-                case .requestRestStop(let length):
+                case .requestRestStop:
+                    return .snapshot(try await engine.requestRestStop())
+                case .startRestStop(let length):
                     let length = length ?? AscentStateMachine.defaultRestStopLength
-                    return .snapshot(try await engine.requestRestStop(length: length))
+                    return .snapshot(try await engine.startRestStop(length: length))
+                case .endRestStop:
+                    return .snapshot(try await engine.endRestStop())
                 case .useDescent(let reason, let scope):
                     return .snapshot(try await engine.useDescent(reason: reason, scope: scope))
                 case .updateConfig(let config):

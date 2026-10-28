@@ -9,6 +9,9 @@ public enum TapaError: String, Error, Codable, Sendable {
     case summitLocked
     case notInAscent
     case alreadyInRestStop
+    case notInRestStop
+    /// The Rest Stop is still waiting, or was never asked for.
+    case restStopNotReady
     case sessionNotFound
     case reasonRequired
     case noDescentLeft

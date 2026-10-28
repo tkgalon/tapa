@@ -12,7 +12,9 @@ let usage = """
       add-list <name> <domain>...
       start trail|summit <minutes> <list name>... [--take-oath]
       end <session id>
-      rest [minutes]
+      rest
+      take-rest [minutes]
+      end-rest
       descent <reason>
     """
 
@@ -27,6 +29,9 @@ func describe(_ snapshot: SessionSnapshot) {
     print("Mode: \(snapshot.mode?.rawValue ?? "none")")
     if let endsAt = snapshot.endsAt {
         print("Ends: \(endsAt.formatted(time))")
+    }
+    if let readyAt = snapshot.restStopReadyAt {
+        print("Rest Stop ready at: \(readyAt.formatted(.dateTime.hour().minute().second()))")
     }
     if let restStop = snapshot.restStop {
         print("Rest Stop until: \(restStop.endAt.formatted(time))")
@@ -108,8 +113,14 @@ do {
         describe(try await client.endTrail(sessionID: id))
 
     case "rest":
+        describe(try await client.requestRestStop())
+
+    case "take-rest":
         let length = options.first.flatMap(Double.init).map { $0 * 60 }
-        describe(try await client.requestRestStop(length: length))
+        describe(try await client.startRestStop(length: length))
+
+    case "end-rest":
+        describe(try await client.endRestStop())
 
     case "descent":
         guard !options.isEmpty else { fail(usage) }

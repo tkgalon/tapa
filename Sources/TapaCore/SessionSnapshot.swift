@@ -13,6 +13,11 @@ public struct SessionSnapshot: Codable, Hashable, Sendable {
     /// Set when the saved state couldn't be read and the daemon started over at Basecamp, so the UI
     /// can tell the user.
     public let recoveredFromUnreadableState: Bool
+    /// How long the next Rest Stop would wait before it can be taken. Optional, like the next
+    /// one, so a daemon from before waits existed still decodes.
+    public let nextRestStopWait: TimeInterval?
+    /// When the Rest Stop asked for can be taken.
+    public let restStopReadyAt: Date?
 
     public init(
         state: SessionState,
@@ -22,7 +27,9 @@ public struct SessionSnapshot: Codable, Hashable, Sendable {
         endsAt: Date?,
         descentsRemaining: Int,
         isClockVerified: Bool,
-        recoveredFromUnreadableState: Bool
+        recoveredFromUnreadableState: Bool,
+        nextRestStopWait: TimeInterval? = nil,
+        restStopReadyAt: Date? = nil
     ) {
         self.state = state
         self.activeSessions = activeSessions
@@ -32,5 +39,7 @@ public struct SessionSnapshot: Codable, Hashable, Sendable {
         self.descentsRemaining = descentsRemaining
         self.isClockVerified = isClockVerified
         self.recoveredFromUnreadableState = recoveredFromUnreadableState
+        self.nextRestStopWait = nextRestStopWait
+        self.restStopReadyAt = restStopReadyAt
     }
 }
