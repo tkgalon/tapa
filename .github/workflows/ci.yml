@@ -9,7 +9,7 @@ jobs:
   test:
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: swift --version
       - run: swift build
       - run: swift test --enable-code-coverage
@@ -17,6 +17,6 @@ jobs:
   lint:
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: brew install swiftlint
       - run: ./scripts/lint.sh
