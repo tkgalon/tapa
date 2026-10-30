@@ -19,6 +19,9 @@ final class TabReader {
 
     private var deniedUntil: [Browser: Date] = [:]
     private var lastReading: Reading?
+    /// Compiled once per browser. Compiling loads the browser's scripting dictionary, and doing
+    /// that on every reading left the tracker holding about 20 MB more.
+    private var readScripts: [Browser: NSAppleScript] = [:]
 
     /// The address of the front window's tab in view, or `nil` if it can't be read.
     func address(in browser: Browser) -> String? {
@@ -27,19 +30,21 @@ final class TabReader {
             return lastReading.address
         }
         guard (deniedUntil[browser] ?? .distantPast) < .now else { return nil }
-        let address = run(browser.readAddress, in: browser)
+        let script = readScripts[browser] ?? NSAppleScript(source: browser.readAddress)
+        readScripts[browser] = script
+        let address = run(script, in: browser)
         lastReading = Reading(browser: browser, at: .now, address: address)
         return address
     }
 
     func replaceAddress(in browser: Browser, with address: String) {
         lastReading = nil
-        _ = run(browser.replaceAddress(with: address), in: browser)
+        _ = run(NSAppleScript(source: browser.replaceAddress(with: address)), in: browser)
     }
 
-    private func run(_ source: String, in browser: Browser) -> String? {
+    private func run(_ script: NSAppleScript?, in browser: Browser) -> String? {
         var error: NSDictionary?
-        let result = NSAppleScript(source: source)?.executeAndReturnError(&error)
+        let result = script?.executeAndReturnError(&error)
         guard let error else { return result?.stringValue }
 
         // -1743: the user hasn't allowed Tapa to control this browser.
